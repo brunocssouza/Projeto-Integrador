@@ -12,7 +12,8 @@ Larissa Silva de Souza Neitzke
 ![image](https://github.com/user-attachments/assets/095bbf9c-3b52-4441-a9b8-07238299364d)
 
 ### Modelagem do Banco de Dados
-![image](https://github.com/user-attachments/assets/13825e43-f6bc-408f-b913-839dd905076d)
+![image](https://github.com/user-attachments/assets/f59524bb-186e-48ac-9d17-45c8f3811af4)
+
 
 
 
