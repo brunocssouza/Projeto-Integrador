@@ -12,5 +12,6 @@ Larissa Silva de Souza Neitzke
 ![image](https://github.com/user-attachments/assets/095bbf9c-3b52-4441-a9b8-07238299364d)
 
 ### Modelagem do Banco de Dados
-![Modelo ER](docs/Modelo_ER.png)
+![Modelo ER](https://github.com/user-attachments/assets/e021ecbd-231e-415f-8e6f-4dbeb6224c7a)
+
 
