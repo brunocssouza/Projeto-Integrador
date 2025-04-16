@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<DIAGRAMA ID="1" TIPO="tpLogico" UniversalUnicID="6CA9-D6-BA87-8A-B43A-17-5A">
+<DIAGRAMA ID="1" TIPO="tpLogico" UniversalUnicID="B355-12-5523-D0-DEA5-7B-78">
     <InfoDiagrama ID="1">
         <Versao Valor="3.2.0"/>
         <Autores/>
@@ -8,15 +8,15 @@
         <Height Valor="4096"/>
         <Alinhamento_v Valor="50"/>
         <Alinhamento_h Valor="60"/>
-        <Zoom Valor="75"/>
+        <Zoom Valor="100"/>
         <Fonte Estilo="1" Nome="Arial" Tamanho="12"/>
-        <Localizacao Left="273" Top="694"/>
+        <Localizacao Left="850" Top="1169"/>
         <Realce Valor="false"/>
         <SeparatorSQL Valor=";"/>
         <Prefixo Valor=""/>
     </InfoDiagrama>
     <Tabela ID="71">
-        <Bounds Height="259" Left="1754" Top="1434" Width="262"/>
+        <Bounds Height="259" Left="1753" Top="1442" Width="262"/>
         <DisablePainted Valor="false"/>
         <Texto>Entrevista</Texto>
         <Observacao/>
@@ -194,13 +194,13 @@
         <Largura Valor="1"/>
         <Ligacoes PontaA="71" PontaB="78"/>
         <Pontos>
-            <Ponto Left="2014" Top="1562"/>
-            <Ponto Left="2062" Top="1562"/>
-            <Ponto Left="2062" Top="1562"/>
-            <Ponto Left="2110" Top="1562"/>
+            <Ponto Left="2013" Top="1570"/>
+            <Ponto Left="2057" Top="1570"/>
+            <Ponto Left="2057" Top="1570"/>
+            <Ponto Left="2101" Top="1570"/>
         </Pontos>
         <LogicoCardinalidade ID="73">
-            <Bounds Height="14" Left="2024" Top="1550" Width="34"/>
+            <Bounds Height="14" Left="2017" Top="1558" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_15</Texto>
             <Observacao/>
@@ -214,7 +214,7 @@
             <Fonte Estilo="1" Nome="Arial" Tamanho="12"/>
         </LogicoCardinalidade>
         <LogicoCardinalidade ID="74">
-            <Bounds Height="14" Left="2072" Top="1550" Width="34"/>
+            <Bounds Height="14" Left="2068" Top="1558" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_16</Texto>
             <Observacao/>
@@ -243,12 +243,12 @@
         <Ligacoes PontaA="83" PontaB="79"/>
         <Pontos>
             <Ponto Left="1281" Top="1718"/>
-            <Ponto Left="1281" Top="1747"/>
-            <Ponto Left="1281" Top="1747"/>
-            <Ponto Left="1281" Top="1776"/>
+            <Ponto Left="1281" Top="1746"/>
+            <Ponto Left="1281" Top="1746"/>
+            <Ponto Left="1281" Top="1774"/>
         </Pontos>
         <LogicoCardinalidade ID="76">
-            <Bounds Height="14" Left="1249" Top="1728" Width="34"/>
+            <Bounds Height="14" Left="1248" Top="1728" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_5</Texto>
             <Observacao/>
@@ -262,7 +262,7 @@
             <Fonte Estilo="1" Nome="Arial" Tamanho="12"/>
         </LogicoCardinalidade>
         <LogicoCardinalidade ID="77">
-            <Bounds Height="14" Left="1247" Top="1758" Width="36"/>
+            <Bounds Height="14" Left="1248" Top="1762" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_6</Texto>
             <Observacao/>
@@ -277,7 +277,7 @@
         </LogicoCardinalidade>
     </LogicoLinha>
     <Tabela ID="78">
-        <Bounds Height="149" Left="2114" Top="1494" Width="205"/>
+        <Bounds Height="149" Left="2105" Top="1502" Width="205"/>
         <DisablePainted Valor="false"/>
         <Texto>Feedback</Texto>
         <Observacao/>
@@ -359,7 +359,7 @@
         </Constraints>
     </Tabela>
     <Tabela ID="79">
-        <Bounds Height="149" Left="1180" Top="1780" Width="218"/>
+        <Bounds Height="149" Left="1180" Top="1778" Width="218"/>
         <DisablePainted Valor="false"/>
         <Texto>Aluno</Texto>
         <Observacao/>
@@ -465,12 +465,12 @@
         <Largura Valor="1"/>
         <Ligacoes PontaA="71" PontaB="79"/>
         <Pontos>
-            <Ponto Left="1890" Top="1691"/>
-            <Ponto Left="1890" Top="1854"/>
-            <Ponto Left="1396" Top="1854"/>
+            <Ponto Left="1889" Top="1699"/>
+            <Ponto Left="1889" Top="1852"/>
+            <Ponto Left="1396" Top="1852"/>
         </Pontos>
         <LogicoCardinalidade ID="81">
-            <Bounds Height="14" Left="1858" Top="1701" Width="34"/>
+            <Bounds Height="14" Left="1856" Top="1709" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_11</Texto>
             <Observacao/>
@@ -484,7 +484,7 @@
             <Fonte Estilo="1" Nome="Arial" Tamanho="12"/>
         </LogicoCardinalidade>
         <LogicoCardinalidade ID="82">
-            <Bounds Height="14" Left="1406" Top="1842" Width="36"/>
+            <Bounds Height="14" Left="1406" Top="1840" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_12</Texto>
             <Observacao/>
@@ -694,7 +694,7 @@
         </Constraints>
     </Tabela>
     <Tabela ID="84">
-        <Bounds Height="127" Left="1506" Top="1494" Width="220"/>
+        <Bounds Height="127" Left="1503" Top="1494" Width="220"/>
         <DisablePainted Valor="false"/>
         <Texto>Pagamento</Texto>
         <Observacao/>
@@ -780,12 +780,12 @@
         <Ligacoes PontaA="83" PontaB="84"/>
         <Pontos>
             <Ponto Left="1415" Top="1557"/>
-            <Ponto Left="1458" Top="1557"/>
-            <Ponto Left="1458" Top="1557"/>
-            <Ponto Left="1502" Top="1557"/>
+            <Ponto Left="1457" Top="1557"/>
+            <Ponto Left="1457" Top="1557"/>
+            <Ponto Left="1499" Top="1557"/>
         </Pontos>
         <LogicoCardinalidade ID="86">
-            <Bounds Height="14" Left="1425" Top="1545" Width="34"/>
+            <Bounds Height="14" Left="1419" Top="1545" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_9</Texto>
             <Observacao/>
@@ -799,7 +799,7 @@
             <Fonte Estilo="1" Nome="Arial" Tamanho="12"/>
         </LogicoCardinalidade>
         <LogicoCardinalidade ID="87">
-            <Bounds Height="14" Left="1464" Top="1545" Width="34"/>
+            <Bounds Height="14" Left="1466" Top="1545" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_10</Texto>
             <Observacao/>
@@ -828,12 +828,12 @@
         <Ligacoes PontaA="83" PontaB="97"/>
         <Pontos>
             <Ponto Left="1272" Top="1391"/>
-            <Ponto Left="1272" Top="1364"/>
-            <Ponto Left="1272" Top="1364"/>
-            <Ponto Left="1272" Top="1336"/>
+            <Ponto Left="1272" Top="1367"/>
+            <Ponto Left="1272" Top="1367"/>
+            <Ponto Left="1272" Top="1342"/>
         </Pontos>
         <LogicoCardinalidade ID="89">
-            <Bounds Height="14" Left="1240" Top="1373" Width="34"/>
+            <Bounds Height="14" Left="1239" Top="1379" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_7</Texto>
             <Observacao/>
@@ -847,7 +847,7 @@
             <Fonte Estilo="1" Nome="Arial" Tamanho="12"/>
         </LogicoCardinalidade>
         <LogicoCardinalidade ID="90">
-            <Bounds Height="14" Left="1238" Top="1346" Width="36"/>
+            <Bounds Height="14" Left="1239" Top="1349" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_8</Texto>
             <Observacao/>
@@ -875,12 +875,12 @@
         <Largura Valor="1"/>
         <Ligacoes PontaA="71" PontaB="97"/>
         <Pontos>
-            <Ponto Left="1889" Top="1430"/>
-            <Ponto Left="1889" Top="1231"/>
-            <Ponto Left="1396" Top="1231"/>
+            <Ponto Left="1888" Top="1438"/>
+            <Ponto Left="1888" Top="1280"/>
+            <Ponto Left="1395" Top="1280"/>
         </Pontos>
         <LogicoCardinalidade ID="92">
-            <Bounds Height="14" Left="1857" Top="1412" Width="34"/>
+            <Bounds Height="14" Left="1855" Top="1420" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_13</Texto>
             <Observacao/>
@@ -894,7 +894,7 @@
             <Fonte Estilo="1" Nome="Arial" Tamanho="12"/>
         </LogicoCardinalidade>
         <LogicoCardinalidade ID="93">
-            <Bounds Height="14" Left="1406" Top="1219" Width="36"/>
+            <Bounds Height="14" Left="1405" Top="1268" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_14</Texto>
             <Observacao/>
@@ -922,12 +922,13 @@
         <Largura Valor="1"/>
         <Ligacoes PontaA="101" PontaB="79"/>
         <Pontos>
-            <Ponto Left="1027" Top="1689"/>
-            <Ponto Left="1027" Top="1849"/>
-            <Ponto Left="1176" Top="1849"/>
+            <Ponto Left="1063" Top="1847"/>
+            <Ponto Left="1120" Top="1847"/>
+            <Ponto Left="1120" Top="1847"/>
+            <Ponto Left="1176" Top="1847"/>
         </Pontos>
         <LogicoCardinalidade ID="95">
-            <Bounds Height="14" Left="995" Top="1699" Width="34"/>
+            <Bounds Height="14" Left="1073" Top="1835" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_1</Texto>
             <Observacao/>
@@ -941,7 +942,7 @@
             <Fonte Estilo="1" Nome="Arial" Tamanho="12"/>
         </LogicoCardinalidade>
         <LogicoCardinalidade ID="96">
-            <Bounds Height="14" Left="1138" Top="1837" Width="34"/>
+            <Bounds Height="14" Left="1137" Top="1835" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_2</Texto>
             <Observacao/>
@@ -956,7 +957,7 @@
         </LogicoCardinalidade>
     </LogicoLinha>
     <Tabela ID="97">
-        <Bounds Height="215" Left="1170" Top="1124" Width="228"/>
+        <Bounds Height="215" Left="1170" Top="1130" Width="228"/>
         <DisablePainted Valor="false"/>
         <Texto>Tutor</Texto>
         <Observacao/>
@@ -1092,13 +1093,13 @@
         <Largura Valor="1"/>
         <Ligacoes PontaA="111" PontaB="97"/>
         <Pontos>
-            <Ponto Left="1281" Top="1062"/>
-            <Ponto Left="1281" Top="1091"/>
-            <Ponto Left="1281" Top="1091"/>
-            <Ponto Left="1281" Top="1120"/>
+            <Ponto Left="1475" Top="1188"/>
+            <Ponto Left="1435" Top="1188"/>
+            <Ponto Left="1435" Top="1188"/>
+            <Ponto Left="1395" Top="1188"/>
         </Pontos>
         <LogicoCardinalidade ID="99">
-            <Bounds Height="14" Left="1247" Top="1072" Width="36"/>
+            <Bounds Height="14" Left="1442" Top="1176" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_17</Texto>
             <Observacao/>
@@ -1112,7 +1113,7 @@
             <Fonte Estilo="1" Nome="Arial" Tamanho="12"/>
         </LogicoCardinalidade>
         <LogicoCardinalidade ID="100">
-            <Bounds Height="14" Left="1249" Top="1102" Width="34"/>
+            <Bounds Height="14" Left="1399" Top="1176" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_18</Texto>
             <Observacao/>
@@ -1127,7 +1128,7 @@
         </LogicoCardinalidade>
     </LogicoLinha>
     <Tabela ID="101">
-        <Bounds Height="281" Left="952" Top="1410" Width="186"/>
+        <Bounds Height="281" Left="880" Top="1700" Width="186"/>
         <DisablePainted Valor="false"/>
         <Texto>Usuario</Texto>
         <Observacao/>
@@ -1282,13 +1283,13 @@
         <Largura Valor="1"/>
         <Ligacoes PontaA="112" PontaB="101"/>
         <Pontos>
-            <Ponto Left="862" Top="1550"/>
-            <Ponto Left="905" Top="1550"/>
-            <Ponto Left="905" Top="1550"/>
-            <Ponto Left="948" Top="1550"/>
+            <Ponto Left="970" Top="1647"/>
+            <Ponto Left="970" Top="1672"/>
+            <Ponto Left="970" Top="1672"/>
+            <Ponto Left="970" Top="1696"/>
         </Pontos>
         <LogicoCardinalidade ID="103">
-            <Bounds Height="14" Left="872" Top="1538" Width="36"/>
+            <Bounds Height="14" Left="937" Top="1657" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_21</Texto>
             <Observacao/>
@@ -1302,7 +1303,7 @@
             <Fonte Estilo="1" Nome="Arial" Tamanho="12"/>
         </LogicoCardinalidade>
         <LogicoCardinalidade ID="104">
-            <Bounds Height="14" Left="910" Top="1538" Width="34"/>
+            <Bounds Height="14" Left="937" Top="1684" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_22</Texto>
             <Observacao/>
@@ -1330,12 +1331,13 @@
         <Largura Valor="1"/>
         <Ligacoes PontaA="101" PontaB="97"/>
         <Pontos>
-            <Ponto Left="1027" Top="1406"/>
-            <Ponto Left="1027" Top="1230"/>
-            <Ponto Left="1166" Top="1230"/>
+            <Ponto Left="1063" Top="1807"/>
+            <Ponto Left="1115" Top="1807"/>
+            <Ponto Left="1115" Top="1236"/>
+            <Ponto Left="1166" Top="1236"/>
         </Pontos>
         <LogicoCardinalidade ID="106">
-            <Bounds Height="14" Left="995" Top="1388" Width="34"/>
+            <Bounds Height="14" Left="1073" Top="1795" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_3</Texto>
             <Observacao/>
@@ -1349,7 +1351,7 @@
             <Fonte Estilo="1" Nome="Arial" Tamanho="12"/>
         </LogicoCardinalidade>
         <LogicoCardinalidade ID="107">
-            <Bounds Height="14" Left="1128" Top="1218" Width="34"/>
+            <Bounds Height="14" Left="1127" Top="1224" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_4</Texto>
             <Observacao/>
@@ -1377,13 +1379,13 @@
         <Largura Valor="1"/>
         <Ligacoes PontaA="111" PontaB="116"/>
         <Pontos>
-            <Ponto Left="1466" Top="994"/>
-            <Ponto Left="1511" Top="994"/>
-            <Ponto Left="1511" Top="994"/>
-            <Ponto Left="1556" Top="994"/>
+            <Ponto Left="1837" Top="1189"/>
+            <Ponto Left="1878" Top="1189"/>
+            <Ponto Left="1878" Top="1189"/>
+            <Ponto Left="1919" Top="1189"/>
         </Pontos>
         <LogicoCardinalidade ID="109">
-            <Bounds Height="14" Left="1476" Top="982" Width="36"/>
+            <Bounds Height="14" Left="1841" Top="1177" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_19</Texto>
             <Observacao/>
@@ -1397,7 +1399,7 @@
             <Fonte Estilo="1" Nome="Arial" Tamanho="12"/>
         </LogicoCardinalidade>
         <LogicoCardinalidade ID="110">
-            <Bounds Height="14" Left="1518" Top="982" Width="34"/>
+            <Bounds Height="14" Left="1886" Top="1177" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_20</Texto>
             <Observacao/>
@@ -1412,9 +1414,9 @@
         </LogicoCardinalidade>
     </LogicoLinha>
     <Tabela ID="111">
-        <Bounds Height="127" Left="1108" Top="937" Width="360"/>
+        <Bounds Height="127" Left="1479" Top="1132" Width="360"/>
         <DisablePainted Valor="false"/>
-        <Texto>Tutor_TecnologiaConhecida</Texto>
+        <Texto>TecnologiaConhecida_Tutor</Texto>
         <Observacao/>
         <Dicionario/>
         <Fonte Estilo="1" Nome="Arial" Tamanho="12"/>
@@ -1495,7 +1497,7 @@
         </Constraints>
     </Tabela>
     <Tabela ID="112">
-        <Bounds Height="127" Left="636" Top="1487" Width="228"/>
+        <Bounds Height="127" Left="858" Top="1523" Width="228"/>
         <DisablePainted Valor="false"/>
         <Texto>Endereco_Usuario</Texto>
         <Observacao/>
@@ -1591,13 +1593,13 @@
         <Largura Valor="1"/>
         <Ligacoes PontaA="112" PontaB="117"/>
         <Pontos>
-            <Ponto Left="632" Top="1550"/>
-            <Ponto Left="590" Top="1550"/>
-            <Ponto Left="590" Top="1550"/>
-            <Ponto Left="548" Top="1550"/>
+            <Ponto Left="970" Top="1519"/>
+            <Ponto Left="970" Top="1491"/>
+            <Ponto Left="970" Top="1491"/>
+            <Ponto Left="970" Top="1462"/>
         </Pontos>
         <LogicoCardinalidade ID="114">
-            <Bounds Height="14" Left="592" Top="1538" Width="36"/>
+            <Bounds Height="14" Left="937" Top="1507" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_23</Texto>
             <Observacao/>
@@ -1611,7 +1613,7 @@
             <Fonte Estilo="1" Nome="Arial" Tamanho="12"/>
         </LogicoCardinalidade>
         <LogicoCardinalidade ID="115">
-            <Bounds Height="14" Left="558" Top="1538" Width="34"/>
+            <Bounds Height="14" Left="937" Top="1472" Width="35"/>
             <DisablePainted Valor="false"/>
             <Texto>Cardinalidade_24</Texto>
             <Observacao/>
@@ -1626,7 +1628,7 @@
         </LogicoCardinalidade>
     </LogicoLinha>
     <Tabela ID="116">
-        <Bounds Height="105" Left="1560" Top="948" Width="253"/>
+        <Bounds Height="105" Left="1923" Top="1143" Width="253"/>
         <DisablePainted Valor="false"/>
         <Texto>Tecnologia_Conhecida</Texto>
         <Observacao/>
@@ -1688,7 +1690,7 @@
         </Constraints>
     </Tabela>
     <Tabela ID="117">
-        <Bounds Height="259" Left="373" Top="1421" Width="177"/>
+        <Bounds Height="259" Left="879" Top="1206" Width="177"/>
         <DisablePainted Valor="false"/>
         <Texto>Endereco</Texto>
         <Observacao/>
