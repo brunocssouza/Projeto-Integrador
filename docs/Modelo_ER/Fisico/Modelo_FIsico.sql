@@ -151,3 +151,46 @@ ALTER TABLE Endereco_Usuario ADD CONSTRAINT FK_Endereco_Usuario_1
 ALTER TABLE Endereco_Usuario ADD CONSTRAINT FK_Endereco_Usuario_2
     FOREIGN KEY (fk_Endereco_endereco_id)
     REFERENCES Endereco (endereco_id);
+
+
+
+
+--
+-- Função que será chamada pela trigger
+CREATE OR REPLACE FUNCTION inserir_entrevista_apos_agendamento()
+RETURNS TRIGGER AS $$
+DECLARE
+    novo_id_entrevista NUMERIC(13);
+BEGIN
+    -- Gerar um ID simples (pode ser substituído por uma lógica mais robusta se necessário)
+    SELECT COALESCE(MAX(entrevista_id), 0) + 1 INTO novo_id_entrevista FROM Entrevista;
+
+    INSERT INTO Entrevista (
+        entrevista_id,
+        area,
+        idioma,
+        duracao,
+        fk_Aluno_fk_Usuario_usuario_id,
+        fk_Aluno_fk_Usuario_cpf,
+        fk_Tutor_fk_Usuario_usuario_id,
+        fk_Tutor_fk_Usuario_cpf
+    ) VALUES (
+        novo_id_entrevista,
+        NEW.area,
+        NEW.idioma,
+        (NEW.duracao::INTERVAL + NEW.hora)::TIMESTAMP,  -- Opcional para compor a duração
+        NEW.fk_Aluno_fk_Usuario_usuario_id,
+        NEW.fk_Aluno_fk_Usuario_cpf,
+        NEW.fk_Tutor_fk_Usuario_usuario_id,
+        NEW.fk_Tutor_fk_Usuario_cpf
+    );
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger que chama a função após um insert em Agendamento
+CREATE TRIGGER trigger_inserir_entrevista
+AFTER INSERT ON Agendamento
+FOR EACH ROW
+EXECUTE FUNCTION inserir_entrevista_apos_agendamento();
