@@ -155,14 +155,13 @@ ALTER TABLE Endereco_Usuario ADD CONSTRAINT FK_Endereco_Usuario_2
 
 
 
---
--- Função que será chamada pela trigger
+
+-- Trigger: Agendamento > Entrevista
 CREATE OR REPLACE FUNCTION inserir_entrevista_apos_agendamento()
 RETURNS TRIGGER AS $$
 DECLARE
     novo_id_entrevista NUMERIC(13);
 BEGIN
-    -- Gerar um ID simples (pode ser substituído por uma lógica mais robusta se necessário)
     SELECT COALESCE(MAX(entrevista_id), 0) + 1 INTO novo_id_entrevista FROM Entrevista;
 
     INSERT INTO Entrevista (
@@ -188,3 +187,9 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_inserir_entrevista ON Agendamento;
+CREATE TRIGGER trigger_inserir_entrevista
+AFTER INSERT ON Agendamento
+FOR EACH ROW
+EXECUTE FUNCTION inserir_entrevista_apos_agendamento();
