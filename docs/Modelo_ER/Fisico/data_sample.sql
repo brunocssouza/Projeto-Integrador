@@ -58,8 +58,3 @@ INSERT INTO Feedback VALUES
 (2, 'Regular', 'Estudar mais vocabulário', 'Razoável'),
 (3, 'Excelente', 'Nenhuma', 'Ótima');
 
--- Entrevista: entrevista_id, area, idioma, duracao, fk_Aluno_fk_Usuario_usuario_id, fk_Aluno_fk_Usuario_cpf, fk_Tutor_fk_Usuario_usuario_id, fk_Tutor_fk_Usuario_cpf, fk_Feedback_feedback_id
-INSERT INTO Entrevista VALUES
-(1, 'Negócios', 'Inglês', '25-04-2025 10:00:00', 1, '12345678900', 2, '23456789011', 1),
-(2, 'Viagem', 'Espanhol', '26-04-2025 14:00:00', 2, '23456789011', 3, '34567890122', 2),
-(3, 'Acadêmico', 'Francês', '27-04-2025 16:30:00', 3, '34567890122', 1, '12345678900', 3);
