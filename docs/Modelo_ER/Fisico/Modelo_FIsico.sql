@@ -178,7 +178,7 @@ BEGIN
         novo_id_entrevista,
         NEW.area,
         NEW.idioma,
-        (NEW.duracao::INTERVAL + NEW.hora)::TIMESTAMP,  -- Opcional para compor a duração
+        NULL,
         NEW.fk_Aluno_fk_Usuario_usuario_id,
         NEW.fk_Aluno_fk_Usuario_cpf,
         NEW.fk_Tutor_fk_Usuario_usuario_id,
@@ -188,9 +188,3 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
--- Trigger que chama a função após um insert em Agendamento
-CREATE TRIGGER trigger_inserir_entrevista
-AFTER INSERT ON Agendamento
-FOR EACH ROW
-EXECUTE FUNCTION inserir_entrevista_apos_agendamento();
