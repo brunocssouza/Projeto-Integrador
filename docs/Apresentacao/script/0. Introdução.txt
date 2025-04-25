@@ -1,0 +1,21 @@
+========= DIÁLOGO =========
+Interviewer: Hi, welcome!
+Candidate: Hi, welcome to you too!
+
+Interviewer: U-Uh, thank you for joining us today. Can you start by telling me a bit about yourself?
+Candidate: Yes, I from... I am, uh, job, I work, many job, good worker.
+
+Interviewer: Okay... Can you tell me about your experience with software development?
+Candidate: (Meu deus...) Yes, I do soft... soft wear... uh... I use... many computer, good... program... Java... window... excel.
+
+Interviewer: Right... And how do you handle working under pressure?
+Candidate: Pressur? Uh... like... when boss angry? I... I do fast... uh... sorry, what mean 'pressur'?
+
+Interviewer: Hmm, I think we’re going to stop here. Thank you for your time. It was... Unique.
+Candidate: Uh... thank you.
+
+(Interviewer indginado)
+(Candidate debruçado lamentando)
+
+========= INTRODUÇÃO =========
+[questionamentos da larisa que esqueci]
