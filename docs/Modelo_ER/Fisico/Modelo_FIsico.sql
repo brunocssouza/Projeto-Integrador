@@ -1,4 +1,38 @@
+/* Modelo_Logico: */
 
+CREATE TABLE Entrevista (
+	entrevista_id NUMERIC(13) PRIMARY KEY,
+    area VARCHAR(255) NOT NULL,
+    idioma VARCHAR(255) NOT NULL,
+    duracao TIMESTAMP,
+    fk_Aluno_fk_Usuario_usuario_id NUMERIC(13),
+    fk_Aluno_fk_Usuario_cpf VARCHAR(255),
+    fk_Tutor_fk_Usuario_usuario_id NUMERIC(13),
+    fk_Tutor_fk_Usuario_cpf VARCHAR(255),
+    fk_Feedback_feedback_id NUMERIC(13)
+);
+
+CREATE TABLE Feedback (
+	feedback_id NUMERIC(13) PRIMARY KEY,
+    avaliacao_fluencia VARCHAR(255) NOT NULL,
+    sugestao_melhoria VARCHAR(255) NOT NULL,
+    avaliacao_tecnica VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE Aluno (
+    formacao_academica VARCHAR(255) NOT NULL,
+    idioma_nivelamento VARCHAR(255) NOT NULL,
+    fk_Usuario_usuario_id NUMERIC(13),
+    fk_Usuario_cpf VARCHAR(255),
+    PRIMARY KEY (fk_Usuario_usuario_id, fk_Usuario_cpf)
+);
+
+CREATE TABLE Agendamento (
+	agendamento_id NUMERIC(13) PRIMARY KEY,
+    area VARCHAR(255) NOT NULL,
+    idioma VARCHAR(255) NOT NULL,
+    valor DECIMAL(13,2) NOT NULL,
+    duracao TIME NOT NULL,
     data DATE NOT NULL,
     hora TIME NOT NULL,
     fk_Aluno_fk_Usuario_usuario_id NUMERIC(13),
@@ -11,7 +45,7 @@
 CREATE TABLE Pagamento (
     pagamento_id NUMERIC(13) PRIMARY KEY,
     forma_de_pagamento VARCHAR(255) NOT NULL,
-    valor MONEY NOT NULL
+    valor DECIMAL(13,2) NOT NULL
 );
 
 CREATE TABLE Tutor (
