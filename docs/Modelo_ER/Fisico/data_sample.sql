@@ -1,8 +1,8 @@
 -- Usuario: usuario_id, cpf, disponibilidade, usuario_nome, telefone2, telefone1, nacionalidade, data_nascimento, senha, email
 INSERT INTO Usuario VALUES
-(1, '12345678900', 'Manhã', 'Larissa Neitzke', 999999999, 988888888, 'Brasileira', '22-04-2001', 'senha123', 'larissa@email.com'),
-(2, '23456789011', 'Tarde', 'Bruno César', 977777777, 966666666, 'Brasileiro', '15-03-1995', 'senha456', 'bruno@email.com'),
-(3, '34567890122', 'Noite', 'Ana Lima', 955555555, 944444444, 'Brasileira', '01-01-1990', 'senha789', 'ana@email.com');
+(1, '12345678900', 'Manhã', 'Larissa Neitzke', 999999999, 988888888, 'Brasileira', '2001-09-11', 'senha123', 'larissa@email.com'),
+(2, '23456789011', 'Tarde', 'Bruno César', 977777777, 966666666, 'Brasileiro', '1995-03-15', 'senha456', 'bruno@email.com'),
+(3, '34567890122', 'Noite', 'Ana Lima', 955555555, 944444444, 'Brasileira', '1990-01-01', 'senha789', 'ana@email.com');
 
 -- Endereco: endereco_id, bairro, cep, complemento, numero, rua, estado, pais, cidade
 INSERT INTO Endereco VALUES
@@ -48,13 +48,12 @@ INSERT INTO Pagamento VALUES
 
 -- Agendamento: agendamento_id, area, idioma, valor, duracao, data, hora, fk_Aluno_fk_Usuario_usuario_id, fk_Aluno_fk_Usuario_cpf, fk_Tutor_fk_Usuario_usuario_id, fk_Tutor_fk_Usuario_cpf, fk_Pagamento_pagamento_id
 INSERT INTO Agendamento VALUES
-(1, 'Conversação', 'Inglês', 100.00, '01:00', '25-04-2025', '10:00', 1, '12345678900', 2, '23456789011', 1),
-(2, 'Gramática', 'Espanhol', 120.50, '01:30', '26-04-2025', '14:00', 2, '23456789011', 3, '34567890122', 2),
-(3, 'Vocabulário', 'Francês', 80.75, '00:45', '27-04-2025', '16:30', 3, '34567890122', 1, '12345678900', 3);
+(1, 'Conversação', 'Inglês', 100.00, '01:00', '2025-04-25', '10:00', 1, '12345678900', 2, '23456789011', 1),
+(2, 'Gramática', 'Espanhol', 120.50, '01:30', '2025-04-26', '14:00', 2, '23456789011', 3, '34567890122', 2),
+(3, 'Vocabulário', 'Francês', 80.75, '00:45', '2025-04-26', '16:30', 3, '34567890122', 1, '12345678900', 3);
 
 -- Feedback: feedback_id, avaliacao_fluencia, sugestao_melhoria, avaliacao_tecnica
 INSERT INTO Feedback VALUES
 (1, 'Boa', 'Melhorar entonação', 'Muito boa'),
 (2, 'Regular', 'Estudar mais vocabulário', 'Razoável'),
 (3, 'Excelente', 'Nenhuma', 'Ótima');
-
