@@ -1,62 +1,59 @@
--- Usuários
-INSERT INTO Usuario (cpf, disponibilidade, usuario_nome, telefone2, telefone1, nacionalidade, data_nascimento, senha, email)
-VALUES 
-('12345678901', 'Disponível', 'João Silva', '11988887777', '1133221100', 'Brasileira', '1990-05-10', 'senha123', 'joao@email.com'),
-('11122233344', 'Disponível', 'Larissa Neitzke', '11995556666', '1144223344', 'Brasileira', '1995-03-12', 'larissa123', 'larissa@email.com'),
-('55566677788', 'Disponível', 'Bruno César', '11997778888', '1199111222', 'Brasileira', '1992-08-25', 'bruno123', 'bruno@email.com');
+-- Usuario: usuario_id, cpf, disponibilidade, usuario_nome, telefone2, telefone1, nacionalidade, data_nascimento, senha, email
+INSERT INTO Usuario VALUES
+(1, '12345678900', 'Manhã', 'Larissa Neitzke', 999999999, 988888888, 'Brasileira', '2001-09-11', 'senha123', 'larissa@email.com'),
+(2, '23456789011', 'Tarde', 'Bruno César', 977777777, 966666666, 'Brasileiro', '1995-03-15', 'senha456', 'bruno@email.com'),
+(3, '34567890122', 'Noite', 'Ana Lima', 955555555, 944444444, 'Brasileira', '1990-01-01', 'senha789', 'ana@email.com');
 
--- Alunos
-INSERT INTO Aluno (formacao_academica, idioma_nivelamento, fk_Usuario_usuario_id, fk_Usuario_cpf)
-VALUES 
-('Engenharia', 'Inglês Intermediário', 1, '12345678901'),
-('Ciência da Computação', 'Inglês Avançado', 3, '55566677788');
+-- Endereco: endereco_id, bairro, cep, complemento, numero, rua, estado, pais, cidade
+INSERT INTO Endereco VALUES
+(1, 'Centro', 12345678, 'Ap 101', 100, 'Av Central', 'SP', 'Brasil', 'São Paulo'),
+(2, 'Jardins', 23456789, 'Casa', 200, 'Rua das Flores', 'RJ', 'Brasil', 'Rio de Janeiro'),
+(3, 'Bela Vista', 34567890, NULL, 300, 'Rua 7 de Setembro', 'MG', 'Brasil', 'Belo Horizonte');
 
--- Tutores
-INSERT INTO Tutor (cargo, comentario, idioma, descricao, experiencia_profissional, fk_Usuario_usuario_id, fk_Usuario_cpf)
-VALUES 
-('Mentora de Direito Digital', 'Especialista em LGPD e compliance', 'Português', 'Experiência em Direito Digital', '8 anos na área jurídica', 2, '11122233344'),
-('Mentor de Tecnologia', 'Apaixonado por ensinar programação', 'Inglês', 'Experiência em backend e IA', '6 anos como dev sênior', 3, '55566677788');
+-- Endereco_Usuario: fk_Usuario_usuario_id, fk_Usuario_cpf, fk_Endereco_endereco_id
+INSERT INTO Endereco_Usuario VALUES
+(1, '12345678900', 1),
+(2, '23456789011', 2),
+(3, '34567890122', 3);
 
--- Pagamento
-INSERT INTO Pagamento (forma_de_pagamento, valor)
-VALUES ('Pix', 200.00);
+-- Aluno: formacao_academica, idioma_nivelamento, fk_Usuario_usuario_id, fk_Usuario_cpf
+INSERT INTO Aluno VALUES
+('Graduação em Letras', 'Avançado', 1, '12345678900'),
+('Ensino Médio', 'Intermediário', 2, '23456789011'),
+('Graduação em TI', 'Básico', 3, '34567890122');
 
--- Agendamento
-INSERT INTO Agendamento (area, idioma, valor, duracao, data, hora, fk_Aluno_fk_Usuario_usuario_id, fk_Aluno_fk_Usuario_cpf, fk_Tutor_fk_Usuario_usuario_id, fk_Tutor_fk_Usuario_cpf, fk_Pagamento_pagamento_id)
-VALUES 
-('Tecnologia', 'Inglês', 200.00, '01:30:00', '2025-08-05', '14:00:00', 3, '55566677788', 3, '55566677788', 2);
+-- Tutor: cargo, comentario, idioma, descricao, experiencia_profissional, fk_Usuario_usuario_id, fk_Usuario_cpf
+INSERT INTO Tutor VALUES
+('Professor', 'Ótimo comunicador', 'Inglês', 'Ensina bem', '5 anos', 2, '23456789011'),
+('Instrutor', 'Paciência com alunos', 'Espanhol', 'Foco em conversação', '3 anos', 3, '34567890122'),
+('Mentor', 'Didática excelente', 'Francês', 'Trabalho personalizado', '4 anos', 1, '12345678900');
 
--- Feedback
-INSERT INTO Feedback (avaliacao_fluencia, sugestao_melhoria, avaliacao_tecnica)
-VALUES ('Excelente dicção', 'Estudar mais sobre terminologias técnicas', 'Muito bom domínio do conteúdo');
+-- Tecnologia_Conhecida: tecnologia_conhecida_id, nome_tecnologia_conhecida
+INSERT INTO Tecnologia_Conhecida VALUES
+(1, 'Python'),
+(2, 'JavaScript'),
+(3, 'SQL');
 
--- Entrevista
-INSERT INTO Entrevista (area, idioma, duracao, fk_Aluno_fk_Usuario_usuario_id, fk_Aluno_fk_Usuario_cpf, fk_Tutor_fk_Usuario_usuario_id, fk_Tutor_fk_Usuario_cpf, fk_Feedback_feedback_id)
-VALUES ('Direito Digital', 'Português', CURRENT_TIMESTAMP, 3, '55566677788', 2, '11122233344', 2);
+-- TecnologiaConhecida_Tutor: fk_Tutor_fk_Usuario_usuario_id, fk_Tutor_fk_Usuario_cpf, fk_Tecnologia_Conhecida_tecnologia_conhecida_id
+INSERT INTO TecnologiaConhecida_Tutor VALUES
+(2, '23456789011', 1),
+(3, '34567890122', 2),
+(1, '12345678900', 3);
 
--- Endereços
-INSERT INTO Endereco (bairro, cep, complemento, numero, rua, estado, pais, cidade)
-VALUES 
-('Centro', 12345678, 'Apto 12', 100, 'Rua das Flores', 'SP', 'Brasil', 'São Paulo'),
-('Jardim América', 87654321, NULL, 501, 'Av. Brasil', 'RS', 'Brasil', 'Porto Alegre'),
-('Bela Vista', 11000100, 'Casa', 10, 'Rua Horizonte Azul', 'SC', 'Brasil', 'Blumenau');
+-- Pagamento: pagamento_id, forma_de_pagamento, valor
+INSERT INTO Pagamento VALUES
+(1, 'Cartão', 100.00),
+(2, 'Pix', 120.50),
+(3, 'Boleto', 80.75);
 
--- Endereço dos usuários
-INSERT INTO Endereco_Usuario (fk_Usuario_usuario_id, fk_Usuario_cpf, fk_Endereco_endereco_id)
-VALUES 
-(1, '12345678901', 1),
-(2, '11122233344', 2),
-(3, '55566677788', 3);
+-- Agendamento: agendamento_id, area, idioma, valor, duracao, data, hora, fk_Aluno_fk_Usuario_usuario_id, fk_Aluno_fk_Usuario_cpf, fk_Tutor_fk_Usuario_usuario_id, fk_Tutor_fk_Usuario_cpf, fk_Pagamento_pagamento_id
+INSERT INTO Agendamento VALUES
+(1, 'Conversação', 'Inglês', 100.00, '01:00', '2025-04-25', '10:00', 1, '12345678900', 2, '23456789011', 1),
+(2, 'Gramática', 'Espanhol', 120.50, '01:30', '2025-04-26', '14:00', 2, '23456789011', 3, '34567890122', 2),
+(3, 'Vocabulário', 'Francês', 80.75, '00:45', '2025-04-26', '16:30', 3, '34567890122', 1, '12345678900', 3);
 
--- Tecnologias
-INSERT INTO Tecnologia_Conhecida (nome_tecnologia_conhecida)
-VALUES ('Java'), ('SQL'), ('Python'), ('LGPD'), ('Direito Digital');
-
--- Relacionamentos Tutor - Tecnologia
-INSERT INTO TecnologiaConhecida_Tutor (fk_Tutor_fk_Usuario_usuario_id, fk_Tutor_fk_Usuario_cpf, fk_Tecnologia_Conhecida_tecnologia_conhecida_id)
-VALUES 
-(2, '11122233344', 4), -- Larissa -> LGPD
-(2, '11122233344', 5), -- Larissa -> Direito Digital
-(3, '55566677788', 1), -- Bruno -> Java
-(3, '55566677788', 2), -- Bruno -> SQL
-(3, '55566677788', 3); -- Bruno -> Python
+-- Feedback: feedback_id, avaliacao_fluencia, sugestao_melhoria, avaliacao_tecnica
+INSERT INTO Feedback VALUES
+(1, 'Boa', 'Melhorar entonação', 'Muito boa'),
+(2, 'Regular', 'Estudar mais vocabulário', 'Razoável'),
+(3, 'Excelente', 'Nenhuma', 'Ótima');
