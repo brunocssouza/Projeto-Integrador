@@ -1,4 +1,4 @@
--- Usuario: usuario_id, cpf, disponibilidade, usuario_nome, telefone2, telefone1, nacionalidade, data_nascimento, senha, email
+-- Usuario: usuario_id, cpf, disponibilidade, usuario_nome, telefone1, telefone2, nacionalidade, data_nascimento, senha, email
 INSERT INTO Usuario VALUES
 (1, '12345678900', 'Manhã', 'Larissa Neitzke', 999999999, 988888888, 'Brasileira', '2001-09-11', 'senha123', 'larissa@email.com'),
 (2, '23456789011', 'Tarde', 'Bruno César', 977777777, 966666666, 'Brasileiro', '1995-03-15', 'senha456', 'bruno@email.com'),
