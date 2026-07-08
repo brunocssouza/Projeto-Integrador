@@ -1,30 +1,168 @@
+
+/* Importação única do Tailwind v4 */
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Definindo o seu Design System nativamente no CSS */
+@theme {
+  /* Cores */
+  --color-surface-tint: #3d5f92;
+  --color-surface-container-low: #f3f4f5;
+  --color-on-primary: #ffffff;
+  --color-on-tertiary-fixed: #2d1600;
+  --color-inverse-primary: #a8c8ff;
+  --color-surface-bright: #f8f9fa;
+  --color-on-tertiary-fixed-variant: #6b3b00;
+  --color-on-secondary: #ffffff;
+  --color-on-primary-fixed: #001b3c;
+  --color-secondary-container: #50d9fe;
+  --color-surface-variant: #e1e3e4;
+  --color-outline-variant: #c3c6d0;
+  --color-on-tertiary: #ffffff;
+  --color-surface: #f8f9fa;
+  --color-secondary-fixed-dim: #4cd6fb;
+  --color-on-background: #191c1d;
+  --color-on-error-container: #93000a;
+  --color-background: #f8f9fa;
+  --color-primary-fixed: #d5e3ff;
+  --color-on-tertiary-container: #dd8000;
+  --color-on-primary-container: #7798ce;
+  --color-error: #ba1a1a;
+  --color-on-primary-fixed-variant: #234778;
+  --color-surface-container-highest: #e1e3e4;
+  --color-inverse-on-surface: #f0f1f2;
+  --color-on-surface-variant: #43474f;
+  --color-on-secondary-fixed-variant: #004e5f;
+  --color-on-error: #ffffff;
+  --color-surface-dim: #d9dadb;
+  --color-surface-container: #edeeef;
+  --color-inverse-surface: #2e3132;
+  --color-tertiary-container: #492700;
+  --color-surface-container-high: #e7e8e9;
+  --color-outline: #737780;
+  --color-primary-container: #002f5f;
+  --color-tertiary-fixed: #ffdcbf;
+  --color-on-surface: #191c1d;
+  --color-error-container: #ffdad6;
+  --color-surface-container-lowest: #ffffff;
+  --color-on-secondary-fixed: #001f27;
+  --color-secondary-fixed: #b3ebff;
+  --color-tertiary-fixed-dim: #ffb874;
+  --color-tertiary: #2c1500;
+  --color-secondary: #00677d;
+  --color-on-secondary-container: #005c70;
+  --color-primary-fixed-dim: #a8c8ff;
+  --color-primary: #001a3a;
+
+  /* Espaçamentos */
+  --spacing-xs: 4px;
+  --spacing-sm: 12px;
+  --spacing-base: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-margin-mobile: 20px;
+  --spacing-gutter-mobile: 16px;
+
+  /* Border Radius */
+  --radius-DEFAULT: 0.125rem;
+  --radius-lg: 0.25rem;
+  --radius-xl: 0.5rem;
+  --radius-full: 0.75rem;
+
+  /* Famílias de Fontes */
+  --font-headline-sm: 'Inter', sans-serif;
+  --font-headline-lg: 'Inter', sans-serif;
+  --font-label-sm: 'JetBrains Mono', monospace;
+  --font-label-md: 'JetBrains Mono', monospace;
+  --font-body-lg: 'Inter', sans-serif;
+  --font-headline-md: 'Inter', sans-serif;
+  --font-body-md: 'Inter', sans-serif;
+  --font-headline-lg-mobile: 'Inter', sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* 
+  No Tailwind v4, quando uma classe de texto mistura fontSize, 
+  lineHeight, letterSpacing e fontWeight ao mesmo tempo, 
+  a melhor prática é usar @utility 
+*/
+@utility text-headline-sm {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+}
+@utility text-headline-lg {
+  font-size: 32px;
+  line-height: 40px;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+@utility text-label-sm {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+@utility text-label-md {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+}
+@utility text-body-lg {
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 400;
+}
+@utility text-headline-md {
+  font-size: 24px;
+  line-height: 32px;
+  letter-spacing: -0.01em;
+  font-weight: 600;
+}
+@utility text-body-md {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+}
+@utility text-headline-lg-mobile {
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 700;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Utilitários globais do seu projeto */
+@layer base {
+  body {
+    background-color: var(--color-background);
+    /* No Tailwind v4 as variáveis aplicam direto */
+    @apply font-body-md text-on-surface; 
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+  
+  .fill-icon {
+    font-variation-settings: 'FILL' 1;
+  }
+  
+  .mentor-card-shadow {
+    box-shadow: 0 4px 12px rgba(0, 47, 95, 0.08);
+  }
+  
+  /* Custom Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #737780;
+    border-radius: 10px;
+  }
 }
 
 button:hover {
-  cursor:pointer
+  cursor: pointer;
 }
