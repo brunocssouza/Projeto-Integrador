@@ -2,9 +2,8 @@
 
 import { useState, useMemo } from "react";
 import Image from "next/image";
-import Link from "next/link";
 
-// 1. Definição do Esquema de Filtros (Fácil de escalar no futuro)
+// --- Definição do Esquema de Filtros ---
 const FILTER_SCHEMA = {
   Tecnologia: {
     Cargos: [
@@ -34,7 +33,7 @@ const FILTER_SCHEMA = {
   },
 };
 
-// 2. Base de dados atualizada com atributos consistentes
+// --- Base de Dados de Mentores ---
 const mentorsData = [
   {
     id: 1,
@@ -117,26 +116,13 @@ const mentorsData = [
 ];
 
 export default function ExploreMentors() {
-  // Estados
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState("recommended");
 
-  // Controle de quais grandes áreas (Tecnologia, Direito) estão abertas no menu
-  const [openCategories, setOpenCategories] = useState<string[]>(
-    Object.keys(FILTER_SCHEMA),
-  );
+  // Novo estado para controlar se o painel superior de filtros está aberto
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // Função para abrir/fechar as categorias principais
-  const toggleCategory = (category: string) => {
-    setOpenCategories((prev) =>
-      prev.includes(category)
-        ? prev.filter((c) => c !== category)
-        : [...prev, category],
-    );
-  };
-
-  // Função para marcar/desmarcar filtros específicos
   const toggleFilter = (filterItem: string) => {
     setSelectedFilters((prev) =>
       prev.includes(filterItem)
@@ -145,7 +131,6 @@ export default function ExploreMentors() {
     );
   };
 
-  // Motor principal de busca e filtragem
   const filteredMentors = useMemo(() => {
     let result = [...mentorsData];
 
@@ -162,7 +147,6 @@ export default function ExploreMentors() {
 
     if (selectedFilters.length > 0) {
       result = result.filter((m) => {
-        // Criamos um array com todas as características do mentor para bater contra os filtros
         const mentorAttributes = [m.role, ...m.tags];
         return selectedFilters.some((filter) =>
           mentorAttributes.includes(filter),
@@ -192,203 +176,160 @@ export default function ExploreMentors() {
   }, [searchQuery, selectedFilters, sortBy]);
 
   return (
-    <>
-      <header className="bg-white dark:bg-surface-dim border-b border-outline-variant shadow-sm w-full h-16 fixed top-0 z-50">
-        <div className="hidden lg:flex justify-between items-center px-lg h-full max-w-[1440px] mx-auto">
-          <div className="flex items-center gap-xl">
-            <span className="font-headline-md font-bold text-primary">
-              Mock Mentor
-            </span>
-            <nav className="flex items-center gap-lg">
-              <Link
-                href="/dashboard"
-                className="text-on-surface-variant font-medium hover:text-orange-500 transition-colors"
-              >
-                Dashboard
-              </Link>
-              <Link
-                href="/mentores"
-                className="text-orange-500 border-b-2 border-orange-500 font-bold pb-1 transition-colors"
-              >
-                Mentores
-              </Link>
-              <Link
-                href="/agendamentos"
-                className="text-on-surface-variant font-medium hover:text-orange-500 transition-colors"
-              >
-                Agendamentos
-              </Link>
-              <Link
-                href="/relatorios"
-                className="text-on-surface-variant font-medium hover:text-orange-500 transition-colors"
-              >
-                Relatórios
-              </Link>
-            </nav>
-          </div>
+    <div className="p-xl w-full max-w-[1440px] mx-auto min-h-screen flex flex-col">
+      {/* ================= HEADER ================= */}
+      <header className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-lg pt-4">
+        <div>
+          <h1 className="font-headline-lg text-primary font-bold text-[32px]">
+            Explore Mentores
+          </h1>
+          <p className="text-on-surface-variant text-[16px] mt-1">
+            Conecte-se com especialistas das maiores empresas para acelerar sua
+            carreira.
+          </p>
+        </div>
 
-          <div className="flex items-center gap-md">
-            <div className="relative">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">
-                search
-              </span>
-              <input
-                className="pl-10 pr-4 py-2 bg-surface-container rounded-full border-none focus:ring-2 focus:ring-orange-500 w-64 text-label-md transition-all outline-none"
-                placeholder="Buscar mentor ou habilidade..."
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <button className="bg-orange-500 hover:bg-orange-600 text-white px-lg py-2 rounded-full font-bold transition-colors text-label-md shadow-sm">
-              Marcar Entrevista
-            </button>
-            <div className="flex items-center gap-sm ml-sm">
-              <button className="text-on-surface-variant hover:text-orange-500 transition-colors">
-                <span className="material-symbols-outlined">notifications</span>
-              </button>
-              <button className="text-on-surface-variant hover:text-orange-500 transition-colors">
-                <span className="material-symbols-outlined">settings</span>
-              </button>
-              <div className="w-8 h-8 rounded-full overflow-hidden border border-outline-variant bg-gray-300"></div>
-            </div>
+        <div className="flex items-center gap-md">
+          <div className="relative">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">
+              search
+            </span>
+            <input
+              className="pl-10 pr-4 py-2 bg-white border border-outline-variant/60 rounded-full focus:border-orange-500 focus:ring-1 focus:ring-orange-500 w-64 text-label-md transition-all outline-none shadow-sm"
+              placeholder="Buscar mentor, cargo..."
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <button className="w-10 h-10 hidden sm:flex items-center justify-center rounded-full hover:bg-surface-variant transition-colors relative">
+            <span className="material-symbols-outlined text-on-surface-variant">
+              notifications
+            </span>
+          </button>
+          <div className="w-10 h-10 hidden sm:block rounded-full overflow-hidden border-2 border-outline-variant bg-gray-200">
+            <div className="w-full h-full bg-surface-tint"></div>
           </div>
         </div>
       </header>
 
-      <main className="pt-24 pb-12 px-4 lg:px-lg max-w-[1440px] mx-auto flex flex-col lg:flex-row gap-lg min-h-screen">
-        {/* SIDEBAR DE FILTROS ANINHADOS */}
-        <aside className="hidden lg:block w-72 flex-shrink-0 sticky top-24 h-fit">
-          <div className="bg-white border border-outline-variant rounded-xl p-md shadow-sm">
-            <div className="flex justify-between items-center mb-lg">
-              <h2 className="font-headline-sm text-primary">Filtros</h2>
-              {selectedFilters.length > 0 && (
-                <span className="bg-orange-100 text-orange-700 text-[11px] font-bold px-2 py-1 rounded-full">
-                  {selectedFilters.length} ativos
-                </span>
-              )}
-            </div>
+      {/* ================= BARRA DE AÇÕES (FILTROS E ORDENAÇÃO) ================= */}
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-lg bg-surface-container-lowest border border-outline-variant/60 p-2 rounded-2xl shadow-sm">
+        {/* Botão de Toggle do Painel de Filtros */}
+        <button
+          onClick={() => setIsFilterOpen(!isFilterOpen)}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-label-md transition-all ${
+            isFilterOpen || selectedFilters.length > 0
+              ? "bg-orange-500 text-white shadow-sm"
+              : "bg-transparent text-primary hover:bg-surface-variant/50"
+          }`}
+        >
+          <span className="material-symbols-outlined text-[20px]">
+            {isFilterOpen ? "close" : "tune"}
+          </span>
+          Filtros {selectedFilters.length > 0 && `(${selectedFilters.length})`}
+        </button>
 
-            <div className="space-y-6 max-h-[65vh] overflow-y-auto custom-scrollbar pr-2">
-              {Object.entries(FILTER_SCHEMA).map(
-                ([mainCategory, subCategories]) => (
-                  <div
-                    key={mainCategory}
-                    className="border-b border-outline-variant/50 pb-4 last:border-0"
-                  >
-                    {/* Categoria Principal (Expansível) */}
-                    <button
-                      onClick={() => toggleCategory(mainCategory)}
-                      className="flex justify-between items-center w-full group"
-                    >
-                      <h3 className="font-headline-sm text-base text-primary font-bold group-hover:text-orange-500 transition-colors">
-                        {mainCategory}
-                      </h3>
-                      <span className="material-symbols-outlined text-outline-variant group-hover:text-orange-500 transition-colors">
-                        {openCategories.includes(mainCategory)
-                          ? "expand_less"
-                          : "expand_more"}
-                      </span>
-                    </button>
+        {/* Dropdown de Ordenação */}
+        <div className="relative w-full sm:w-auto">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant pointer-events-none">
+            sort
+          </span>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="w-full sm:w-auto bg-transparent border-none pl-10 pr-8 py-2 rounded-xl text-label-md font-bold hover:bg-surface-variant/50 focus:ring-0 transition-colors appearance-none cursor-pointer outline-none"
+          >
+            <option value="recommended">Recomendados</option>
+            <option value="rating">Maior Avaliação</option>
+            <option value="price_asc">Menor Preço</option>
+            <option value="price_desc">Maior Preço</option>
+          </select>
+        </div>
+      </div>
 
-                    {/* Subcategorias e Checkboxes */}
-                    {openCategories.includes(mainCategory) && (
-                      <div className="mt-4 space-y-5">
-                        {Object.entries(subCategories).map(
-                          ([subCategoryName, items]) => (
-                            <div key={subCategoryName} className="pl-2">
-                              <h4 className="font-label-md text-on-surface-variant font-bold mb-2 uppercase text-[11px] tracking-wider">
-                                {subCategoryName}
-                              </h4>
-                              <div className="space-y-2">
-                                {items.map((item) => (
-                                  <label
-                                    key={item}
-                                    className="flex items-center gap-sm cursor-pointer group"
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={selectedFilters.includes(item)}
-                                      onChange={() => toggleFilter(item)}
-                                      className="rounded border-outline-variant text-orange-500 focus:ring-orange-500 h-4 w-4 cursor-pointer transition-colors"
-                                    />
-                                    <span className="text-body-md text-on-surface-variant group-hover:text-primary transition-colors text-[14px]">
-                                      {item}
-                                    </span>
-                                  </label>
-                                ))}
-                              </div>
-                            </div>
-                          ),
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ),
-              )}
-            </div>
-
-            <button
-              onClick={() => {
-                setSelectedFilters([]);
-                setSearchQuery("");
-              }}
-              className="w-full py-2 border border-orange-500 text-orange-600 font-bold rounded-full text-label-md hover:bg-orange-50 transition-colors mt-lg"
-            >
-              Limpar Filtros
-            </button>
-          </div>
-        </aside>
-
-        {/* MENTOR GRID */}
-        <section className="grow">
-          <div className="mb-lg flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
-            <div>
-              <h1 className="font-headline-lg text-primary font-bold text-2xl">
-                Explore Mentores
-              </h1>
-              <p className="text-on-surface-variant text-body-md mt-2">
-                Conecte-se com especialistas das maiores empresas para acelerar
-                sua carreira.
-              </p>
-            </div>
-
-            <div className="relative">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant pointer-events-none">
-                sort
-              </span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="w-full sm:w-auto bg-white border border-outline-variant pl-10 pr-8 py-2 rounded-xl text-label-md font-bold hover:border-orange-500 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-colors appearance-none cursor-pointer outline-none shadow-sm"
+      {/* ================= PAINEL EXPANSÍVEL DE FILTROS ================= */}
+      {isFilterOpen && (
+        <div className="bg-white border border-outline-variant/60 rounded-2xl p-lg shadow-sm mb-lg animate-in slide-in-from-top-4 fade-in duration-200">
+          <div className="flex justify-between items-center mb-6 border-b border-outline-variant/30 pb-4">
+            <h2 className="font-headline-sm text-primary">Filtrar por</h2>
+            {selectedFilters.length > 0 && (
+              <button
+                onClick={() => setSelectedFilters([])}
+                className="text-orange-600 font-bold text-label-md hover:underline"
               >
-                <option value="recommended">Recomendados</option>
-                <option value="rating">Maior Avaliação</option>
-                <option value="price_asc">Menor Preço</option>
-                <option value="price_desc">Maior Preço</option>
-              </select>
-            </div>
+                Limpar todos
+              </button>
+            )}
           </div>
 
-          {filteredMentors.length === 0 && (
-            <div className="bg-white border border-outline-variant rounded-xl p-12 text-center">
-              <span className="material-symbols-outlined text-[48px] text-outline-variant mb-4">
-                search_off
-              </span>
-              <h3 className="font-headline-sm text-primary mb-2">
-                Nenhum mentor encontrado
-              </h3>
-              <p className="text-on-surface-variant">
-                Tente ajustar seus filtros ou remover o termo da busca.
-              </p>
-            </div>
-          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {Object.entries(FILTER_SCHEMA).map(
+              ([mainCategory, subCategories]) => (
+                <div
+                  key={mainCategory}
+                  className="col-span-1 md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-8 lg:border-r lg:last:border-0 border-outline-variant/30 lg:pr-8"
+                >
+                  <div className="sm:col-span-2">
+                    <h3 className="font-headline-sm text-[18px] text-primary font-bold">
+                      {mainCategory}
+                    </h3>
+                  </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-lg">
+                  {Object.entries(subCategories).map(
+                    ([subCategoryName, items]) => (
+                      <div key={subCategoryName}>
+                        <h4 className="font-label-md text-on-surface-variant font-bold mb-3 uppercase text-[11px] tracking-wider">
+                          {subCategoryName}
+                        </h4>
+                        <div className="space-y-2">
+                          {items.map((item) => (
+                            <label
+                              key={item}
+                              className="flex items-center gap-sm cursor-pointer group"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedFilters.includes(item)}
+                                onChange={() => toggleFilter(item)}
+                                className="rounded border-outline-variant text-orange-500 focus:ring-orange-500 h-4 w-4 cursor-pointer transition-colors"
+                              />
+                              <span className="text-body-md text-on-surface-variant group-hover:text-primary transition-colors text-[14px]">
+                                {item}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ),
+                  )}
+                </div>
+              ),
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ================= GRID DE RESULTADOS ================= */}
+      <section className="flex-1 pb-12">
+        {filteredMentors.length === 0 ? (
+          <div className="bg-white border border-outline-variant/60 rounded-xl p-12 text-center shadow-sm">
+            <span className="material-symbols-outlined text-[48px] text-outline-variant mb-4">
+              search_off
+            </span>
+            <h3 className="font-headline-sm text-primary mb-2">
+              Nenhum mentor encontrado
+            </h3>
+            <p className="text-on-surface-variant">
+              Tente ajustar seus filtros ou remover o termo da busca.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-lg">
             {filteredMentors.map((mentor) => (
               <article
                 key={mentor.id}
-                className="bg-white border border-outline-variant rounded-xl p-md mentor-card-shadow flex flex-col group hover:border-orange-500 transition-all duration-300 active:scale-[0.98]"
+                className="bg-white border border-outline-variant/60 rounded-xl p-md mentor-card-shadow flex flex-col group hover:border-orange-500 transition-all duration-300 active:scale-[0.98]"
               >
                 <div className="flex gap-md mb-md items-start">
                   <div className="relative flex-shrink-0">
@@ -402,7 +343,7 @@ export default function ExploreMentors() {
                       />
                     </div>
                     {mentor.isPopular && (
-                      <span className="absolute -bottom-2 -right-2 bg-orange-500 text-white px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
+                      <span className="absolute -bottom-2 -right-2 bg-orange-500 text-white px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm z-10">
                         Popular
                       </span>
                     )}
@@ -452,7 +393,7 @@ export default function ExploreMentors() {
                     ))}
                 </div>
 
-                <div className="pt-md border-t border-outline-variant flex items-center justify-between">
+                <div className="pt-md border-t border-outline-variant/60 flex items-center justify-between">
                   <div className="text-label-md font-bold text-primary">
                     R$ {mentor.price}{" "}
                     <span className="text-on-surface-variant font-normal">
@@ -466,8 +407,18 @@ export default function ExploreMentors() {
               </article>
             ))}
           </div>
-        </section>
-      </main>
-    </>
+        )}
+      </section>
+
+      {/* Floating Action Button */}
+      <button className="fixed bottom-xl right-xl w-16 h-16 rounded-full bg-orange-500 text-white shadow-xl flex items-center justify-center hover:bg-orange-600 hover:scale-105 active:scale-95 transition-all z-40 group">
+        <span className="material-symbols-outlined text-[32px] fill-icon">
+          support_agent
+        </span>
+        <span className="absolute right-full mr-md bg-gray-800 text-white px-md py-2 rounded-lg text-label-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">
+          Ajuda com mentoria
+        </span>
+      </button>
+    </div>
   );
 }
