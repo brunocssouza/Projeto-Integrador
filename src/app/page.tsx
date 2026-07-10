@@ -98,7 +98,7 @@ export default function LandingPage() {
 
           <div className="max-w-[1440px] mx-auto px-4 lg:px-xl py-24 lg:py-32 relative z-10 flex flex-col items-center text-center">
             <span className="inline-block bg-[#002f5f] border border-[#004e5f] text-[#50d9fe] font-bold text-[13px] px-4 py-1.5 rounded-full mb-6">
-              Acelere sua carreira na Tecnologia e no Direito
+              Acelere sua carreira e fique à frente no mercado de trabalho
             </span>
             <h1 className="font-headline-lg text-4xl lg:text-6xl text-white font-black max-w-4xl leading-tight mb-6">
               Domine sua próxima entrevista com profissionais de{" "}
