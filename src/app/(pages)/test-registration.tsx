@@ -13,26 +13,32 @@ export default function TestRegistration() {
         </p>
         <ul className="space-y-3 mb-6">
           <li className="flex items-start">
-            <span className="material-symbols-outlined text-green-500 mr-2">check</span>
+            <span className="material-symbols-outlined text-green-500 mr-2">
+              check
+            </span>
             <span>Multi-step form com transições suaves</span>
           </li>
           <li className="flex items-start">
-            <span className="material-symbols-outlined text-green-500 mr-2">check</span>
+            <span className="material-symbols-outlined text-green-500 mr-2">
+              check
+            </span>
             <span>Validação de campos em tempo real</span>
           </li>
           <li className="flex items-start">
-            <span className="material-symbols-outlined text-green-500 mr-2">check</span>
+            <span className="material-symbols-outlined text-green-500 mr-2">
+              check
+            </span>
             <span>Armazenamento local (JSON) para usuários</span>
           </li>
           <li className="flex items-start">
-            <span className="material-symbols-outlined text-green-500 mr-2">check</span>
+            <span className="material-symbols-outlined text-green-500 mr-2">
+              check
+            </span>
             <span>Sistema de login com verificação de credenciais</span>
           </li>
         </ul>
         <div className="text-center">
-          <p className="text-on-surface-variant text-sm">
-            Para testar:
-          </p>
+          <p className="text-on-surface-variant text-sm">Para testar:</p>
           <ol className="text-left text-sm mt-2 space-y-1">
             <li>1. Acesse /register para criar uma conta</li>
             <li>2. Faça login em /login com suas credenciais</li>

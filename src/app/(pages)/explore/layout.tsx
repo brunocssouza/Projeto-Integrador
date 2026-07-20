@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-// Este layout se aplicará APENAS às rotas dentro da pasta (dashboard)
 export default function DashboardLayout({
   children,
 }: Readonly<{
@@ -8,77 +7,83 @@ export default function DashboardLayout({
 }>) {
   return (
     <div className="min-h-screen bg-background flex">
-      {/* ================= SIDEBAR GLOBAL ================= */}
-      <aside className="w-[280px] bg-surface-container-lowest border-r border-outline-variant flex flex-col justify-between fixed h-screen z-50">
+      {/* ================= SIDEBAR ================= */}
+      <aside className="w-[260px] bg-white border-r border-outline-variant/40 flex flex-col justify-between fixed h-screen z-50">
         <div>
           {/* Logo */}
-          <div className="p-xl pb-lg">
-            <h1 className="font-headline-md font-bold text-primary text-[24px]">
-              Mock Mentor
-            </h1>
-            <p className="text-label-sm text-on-surface-variant font-normal tracking-wide">
-              Preparação Técnica
-            </p>
+          <div className="px-8 pt-8 pb-10">
+            <Link href="/" className="flex items-center gap-2.5 no-underline">
+              <div className="w-7 h-7 border border-primary rounded-full flex items-center justify-center">
+                <span className="material-symbols-outlined text-primary text-[13px]">
+                  rocket_launch
+                </span>
+              </div>
+              <span className="text-[16px] font-semibold text-primary">
+                Mock Mentor
+              </span>
+            </Link>
           </div>
 
           {/* Nav Links */}
-          <nav className="px-md space-y-2 mt-4">
+          <nav className="px-4 space-y-1">
             <Link
               href="/dashboard"
-              className="flex items-center gap-md px-md py-3 rounded-xl bg-secondary-fixed text-on-secondary-fixed font-bold transition-colors hover:opacity-90"
+              className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-on-surface-variant text-[14px] font-medium hover:bg-surface-container-low transition-colors"
             >
-              <span className="material-symbols-outlined text-[22px]">
+              <span className="material-symbols-outlined text-[20px]">
                 dashboard
               </span>
               Dashboard
             </Link>
             <Link
               href="/explore"
-              className="flex items-center gap-md px-md py-3 rounded-xl text-on-surface-variant font-medium hover:bg-surface-variant/50 hover:text-primary transition-colors"
+              className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-on-surface-variant text-[14px] font-medium hover:bg-surface-container-low transition-colors"
             >
-              <span className="material-symbols-outlined text-[22px]">
+              <span className="material-symbols-outlined text-[20px]">
                 search
               </span>
               Explorar Mentores
             </Link>
             <Link
               href="/agendamentos"
-              className="flex items-center gap-md px-md py-3 rounded-xl text-on-surface-variant font-medium hover:bg-surface-variant/50 hover:text-primary transition-colors"
+              className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-on-surface-variant text-[14px] font-medium hover:bg-surface-container-low transition-colors"
             >
-              <span className="material-symbols-outlined text-[22px]">
+              <span className="material-symbols-outlined text-[20px]">
                 calendar_month
               </span>
               Meus Agendamentos
             </Link>
             <Link
               href="/relatorios"
-              className="flex items-center gap-md px-md py-3 rounded-xl text-on-surface-variant font-medium hover:bg-surface-variant/50 hover:text-primary transition-colors"
+              className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-on-surface-variant text-[14px] font-medium hover:bg-surface-container-low transition-colors"
             >
-              <span className="material-symbols-outlined text-[22px]">
+              <span className="material-symbols-outlined text-[20px]">
                 bar_chart
               </span>
-              Meus Relatórios
+              Meus Relatorios
             </Link>
           </nav>
         </div>
 
         {/* Bottom Actions */}
-        <div className="p-md space-y-2 mb-md">
-          <button className="w-full flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-xl font-bold hover:bg-primary/90 transition-colors shadow-sm mb-4 group">
-            <span className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform">
+        <div className="px-4 pb-8 space-y-1">
+          <Link
+            href="/dashboard"
+            className="flex items-center justify-center gap-2 bg-primary text-white py-2.5 rounded-lg font-semibold text-[14px] hover:opacity-90 transition-opacity"
+          >
+            <span className="material-symbols-outlined text-[18px]">
               add
             </span>
             Nova Entrevista
-          </button>
-
-          <button className="w-full flex items-center gap-md px-md py-3 rounded-xl text-on-surface-variant font-medium hover:bg-surface-variant/50 transition-colors">
-            <span className="material-symbols-outlined text-[22px]">
+          </Link>
+          <button className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-on-surface-variant text-[14px] font-medium hover:bg-surface-container-low transition-colors">
+            <span className="material-symbols-outlined text-[20px]">
               settings
             </span>
-            Configurações
+            Configuracoes
           </button>
-          <button className="w-full flex items-center gap-md px-md py-3 rounded-xl text-on-surface-variant font-medium hover:bg-surface-variant/50 transition-colors">
-            <span className="material-symbols-outlined text-[22px]">
+          <button className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-on-surface-variant text-[14px] font-medium hover:bg-surface-container-low transition-colors">
+            <span className="material-symbols-outlined text-[20px]">
               logout
             </span>
             Sair
@@ -86,9 +91,8 @@ export default function DashboardLayout({
         </div>
       </aside>
 
-      {/* ================= ÁREA DE CONTEÚDO ================= */}
-      {/* A margem esquerda de 280px empurra o conteúdo para não ficar debaixo da Sidebar */}
-      <main className="flex-1 ml-[280px]">{children}</main>
+      {/* ================= CONTENT ================= */}
+      <main className="flex-1 ml-[260px]">{children}</main>
     </div>
   );
 }
