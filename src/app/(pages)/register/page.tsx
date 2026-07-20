@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
+import { validateEmail, validatePhone, validateName, formatPhone, validatePassword } from "@/lib/validation";
 
 export default function RegisterPage() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -54,32 +55,6 @@ export default function RegisterPage() {
     }
   };
 
-  const validateEmail = (email: string) => {
-    const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return regex.test(email);
-  };
-
-  const validatePhone = (phone: string) => {
-    const digits = phone.replace(/\D/g, "");
-    if (digits.length === 11 && digits[2] === "9") return true;
-    if (digits.length === 10) return true;
-    return false;
-  };
-
-  const validateName = (name: string) => {
-    const trimmed = name.trim();
-    if (trimmed.length < 2) return false;
-    if (/\d/.test(trimmed)) return false;
-    return true;
-  };
-
-  const formatPhone = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 11);
-    if (digits.length <= 2) return digits;
-    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-  };
-
   const validateStep = () => {
     const newErrors: Record<string, string> = {};
 
@@ -114,14 +89,9 @@ export default function RegisterPage() {
         if (!userData.role) newErrors.role = "Selecione uma area";
         break;
       case 3:
-        if (!userData.password) {
-          newErrors.password = "Senha e obrigatoria";
-        } else if (userData.password.length < 6) {
-          newErrors.password = "Minimo 6 caracteres";
-        } else if (!/[a-zA-Z]/.test(userData.password)) {
-          newErrors.password = "Deve conter pelo menos uma letra";
-        } else if (!/\d/.test(userData.password)) {
-          newErrors.password = "Deve conter pelo menos um numero";
+        const passwordError = validatePassword(userData.password);
+        if (passwordError) {
+          newErrors.password = passwordError;
         }
         if (userData.password !== userData.confirmPassword) {
           newErrors.confirmPassword = "Senhas nao coincidem";
