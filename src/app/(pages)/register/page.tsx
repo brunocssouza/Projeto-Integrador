@@ -97,13 +97,7 @@ export default function RegisterPage() {
         } else if (!validateEmail(userData.email)) {
           newErrors.email = "Email inválido";
         } else {
-          try {
-            const res = await fetch("/api/auth/register", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email: userData.email, cpf: "00000000000", name: "x", phone: "0", password: "x", role: "aluno", languages: ["PT"] }),
-            });
-          } catch {}
+          // Email validation happens at final submit via the register API
         }
         break;
       case 1:
