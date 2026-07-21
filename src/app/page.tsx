@@ -107,7 +107,7 @@ export default function LandingPage() {
           className="absolute inset-0 w-full h-full object-cover -z-20"
         >
           <source src="/video-landingpage.mp4" type="video/mp4" />
-          Seu navegador nao suporta videos.
+          Seu navegador não suporta vídeos.
         </video>
 
         <div className="absolute inset-0 bg-black/40 -z-10" />
@@ -158,7 +158,7 @@ export default function LandingPage() {
           className="max-w-[850px] px-6 lg:px-xl pb-32 pt-4 z-10"
         >
           <h1 className="font-headline-lg text-[2.8rem] lg:text-[3.5rem] font-black leading-[1.1] tracking-tight mb-6">
-            Domine sua proxima entrevista com profissionais de{" "}
+            Domine sua próxima entrevista com profissionais de{" "}
             <span className="text-orange-400">alto nivel</span>.
           </h1>
 
@@ -172,13 +172,13 @@ export default function LandingPage() {
               href="/register"
               className="bg-white text-black px-8 py-3.5 rounded-full font-semibold text-[15px] hover:bg-gray-100 transition-colors text-center"
             >
-              Comecar Agora
+              Começar Agora
             </Link>
             <Link
               href="/login"
               className="text-white px-8 py-3.5 rounded-full font-semibold text-[15px] border border-white/30 hover:bg-white/10 transition-colors text-center"
             >
-              Ja tenho conta
+              Já tenho conta
             </Link>
           </div>
         </main>
@@ -192,7 +192,7 @@ export default function LandingPage() {
               Como funciona
             </p>
             <h2 className="font-headline-lg text-[36px] lg:text-[44px] text-primary font-bold leading-tight">
-              Tudo o que voce precisa para
+              Tudo o que você precisa para
               <br />
               se destacar nas entrevistas.
             </h2>
@@ -208,7 +208,7 @@ export default function LandingPage() {
                   Simulados Realistas
                 </h3>
                 <p className="text-on-surface-variant text-[15px] leading-relaxed max-w-[500px]">
-                  Entrevistas tecnicas e comportamentais identicas as aplicadas
+                  Entrevistas técnicas e comportamentais idênticas às aplicadas
                   pelas maiores empresas do mercado. Sem surpresas no dia.
                 </p>
               </div>
@@ -224,7 +224,7 @@ export default function LandingPage() {
                 </h3>
                 <p className="text-on-surface-variant text-[15px] leading-relaxed max-w-[500px]">
                   Um mapa claro dos seus pontos fortes e do que precisa melhorar
-                  para garantir sua aprovacao.
+                  para garantir sua aprovação.
                 </p>
               </div>
             </div>
@@ -235,11 +235,11 @@ export default function LandingPage() {
               </span>
               <div>
                 <h3 className="font-headline-sm text-[20px] text-primary font-bold mb-2">
-                  Evolucao Mensuravel
+                  Evolução Mensurável
                 </h3>
                 <p className="text-on-surface-variant text-[15px] leading-relaxed max-w-[500px]">
                   Acompanhe seu progresso com um dashboard que mede seu nivel
-                  de habilidade tecnica ao longo do tempo.
+                  de habilidade técnica ao longo do tempo.
                 </p>
               </div>
             </div>
@@ -259,9 +259,9 @@ export default function LandingPage() {
               Mentores
             </p>
             <h2 className="font-headline-lg text-[36px] lg:text-[44px] text-primary font-bold leading-tight">
-              Aprenda com quem ja
+              Aprenda com quem já
               <br />
-              chegou la.
+              chegou lá.
             </h2>
           </div>
 
@@ -315,11 +315,11 @@ export default function LandingPage() {
       <section ref={ctaRef} className="py-32 bg-white">
         <div className="max-w-[700px] mx-auto px-6 lg:px-xl text-center">
           <h2 className="font-headline-lg text-[32px] lg:text-[42px] text-primary font-bold leading-tight mb-6">
-            Pronto para comecar?
+            Pronto para começar?
           </h2>
           <p className="text-on-surface-variant text-[16px] leading-relaxed mb-10 max-w-[480px] mx-auto">
             Junte-se a centenas de profissionais que aceleraram suas carreiras
-            atraves da simulacao pratica.
+            através da simulação prática.
           </p>
           <Link
             href="/register"

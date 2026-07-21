@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Providers from "@/components/Providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -30,8 +31,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-background font-body-md text-on-surface">
-        {/* Aqui o Next.js vai injetar a Landing Page OU o Layout do Dashboard */}
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

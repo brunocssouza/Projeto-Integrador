@@ -4,20 +4,34 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
-import { validateEmail, validatePhone, validateName, formatPhone, validatePassword } from "@/lib/validation";
+import { validateEmail, validatePhone, validateName, formatPhone, validateCpf, formatCpf, validatePassword } from "@/lib/validation";
+
+const AVAILABLE_LANGUAGES = [
+  { id: 1, name: "Português", sigla: "PT" },
+  { id: 2, name: "Inglês", sigla: "EN" },
+  { id: 3, name: "Espanhol", sigla: "ES" },
+  { id: 4, name: "Francês", sigla: "FR" },
+  { id: 5, name: "Alemão", sigla: "DE" },
+  { id: 6, name: "Italiano", sigla: "IT" },
+  { id: 7, name: "Japonês", sigla: "JA" },
+  { id: 8, name: "Mandarim", sigla: "ZH" },
+];
 
 export default function RegisterPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [userData, setUserData] = useState({
     email: "",
+    cpf: "",
     name: "",
     password: "",
     confirmPassword: "",
     phone: "",
     role: "",
+    languages: [] as string[],
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [serverError, setServerError] = useState("");
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -35,16 +49,18 @@ export default function RegisterPage() {
 
   const steps = [
     { title: "Criar conta", subtitle: "Comece com seu e-mail", fields: ["email"] },
-    { title: "Seus dados", subtitle: "Informacoes pessoais", fields: ["name", "phone"] },
-    { title: "Sua area", subtitle: "Qual sua especialidade?", fields: ["role"] },
-    { title: "Definir senha", subtitle: "Ultimo passo", fields: ["password", "confirmPassword"] },
+    { title: "Seus dados", subtitle: "Informações pessoais", fields: ["cpf", "name", "phone"] },
+    { title: "Seu perfil", subtitle: "Escolha seu modo de participação", fields: ["role", "languages"] },
+    { title: "Definir senha", subtitle: "Último passo", fields: ["password", "confirmPassword"] },
   ];
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
-    const finalValue = name === "phone" ? formatPhone(value) : value;
+    let finalValue = value;
+    if (name === "phone") finalValue = formatPhone(value);
+    else if (name === "cpf") finalValue = formatCpf(value);
     setUserData((prev) => ({ ...prev, [name]: finalValue }));
     if (errors[name]) {
       setErrors((prev) => {
@@ -55,38 +71,61 @@ export default function RegisterPage() {
     }
   };
 
-  const validateStep = () => {
+  const toggleLanguage = (sigla: string) => {
+    setUserData((prev) => {
+      const langs = prev.languages.includes(sigla)
+        ? prev.languages.filter((l) => l !== sigla)
+        : [...prev.languages, sigla];
+      return { ...prev, languages: langs };
+    });
+    if (errors.languages) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.languages;
+        return next;
+      });
+    }
+  };
+
+  const validateStep = async () => {
     const newErrors: Record<string, string> = {};
 
     switch (currentStep) {
       case 0:
         if (!userData.email) {
-          newErrors.email = "Email e obrigatorio";
+          newErrors.email = "Email é obrigatório";
         } else if (!validateEmail(userData.email)) {
-          newErrors.email = "Email invalido";
+          newErrors.email = "Email inválido";
         } else {
-          const existingUsers: { email: string }[] = JSON.parse(
-            localStorage.getItem("users") || "[]"
-          );
-          if (existingUsers.some((u) => u.email === userData.email)) {
-            newErrors.email = "Este email ja esta cadastrado";
-          }
+          try {
+            const res = await fetch("/api/auth/register", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email: userData.email, cpf: "00000000000", name: "x", phone: "0", password: "x", role: "aluno", languages: ["PT"] }),
+            });
+          } catch {}
         }
         break;
       case 1:
+        if (!userData.cpf) {
+          newErrors.cpf = "CPF é obrigatório";
+        } else if (!validateCpf(userData.cpf)) {
+          newErrors.cpf = "CPF inválido";
+        }
         if (!userData.name) {
-          newErrors.name = "Nome e obrigatorio";
+          newErrors.name = "Nome é obrigatório";
         } else if (!validateName(userData.name)) {
-          newErrors.name = "Nome invalido (minimo 2 caracteres, sem numeros)";
+          newErrors.name = "Nome inválido (mínimo 2 caracteres, sem números)";
         }
         if (!userData.phone) {
-          newErrors.phone = "Telefone e obrigatorio";
+          newErrors.phone = "Telefone é obrigatório";
         } else if (!validatePhone(userData.phone)) {
           newErrors.phone = "Formato: (DDD) 99999-9999";
         }
         break;
       case 2:
-        if (!userData.role) newErrors.role = "Selecione uma area";
+        if (!userData.role) newErrors.role = "Selecione um modo de participação";
+        if (userData.languages.length === 0) newErrors.languages = "Selecione pelo menos um idioma";
         break;
       case 3:
         const passwordError = validatePassword(userData.password);
@@ -94,7 +133,7 @@ export default function RegisterPage() {
           newErrors.password = passwordError;
         }
         if (userData.password !== userData.confirmPassword) {
-          newErrors.confirmPassword = "Senhas nao coincidem";
+          newErrors.confirmPassword = "Senhas não coincidem";
         }
         break;
     }
@@ -104,27 +143,46 @@ export default function RegisterPage() {
   };
 
   const handleSubmit = async () => {
-    if (!validateStep()) return;
+    const isValid = await validateStep();
+    if (!isValid) return;
+
     setIsLoading(true);
+    setServerError("");
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const existingUsers = JSON.parse(localStorage.getItem("users") || "[]");
-      const newUser = { ...userData, id: Date.now().toString() };
-      existingUsers.push(newUser);
-      localStorage.setItem("users", JSON.stringify(existingUsers));
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: userData.email,
+          cpf: userData.cpf.replace(/\D/g, ""),
+          name: userData.name,
+          phone: userData.phone,
+          password: userData.password,
+          role: userData.role,
+          languages: userData.languages,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setServerError(data.error || "Erro ao registrar");
+        return;
+      }
+
       router.push("/login");
     } catch {
-      alert("Erro ao registrar. Tente novamente.");
+      setServerError("Erro de conexão. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleNext = () => {
-    if (validateStep()) {
-      if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
-      else handleSubmit();
-    }
+  const handleNext = async () => {
+    const isValid = await validateStep();
+    if (!isValid) return;
+    if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
+    else handleSubmit();
   };
 
   const handlePrevious = () => {
@@ -204,6 +262,27 @@ export default function RegisterPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-[13px] font-medium text-on-surface-variant mb-1.5">
+                  CPF
+                </label>
+                <input
+                  type="text"
+                  name="cpf"
+                  value={userData.cpf}
+                  onChange={handleInputChange}
+                  maxLength={14}
+                  className={`w-full px-4 py-3 bg-white border rounded-xl text-[14px] text-on-surface focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 outline-none transition-all placeholder:text-on-surface-variant/30 ${
+                    errors.cpf
+                      ? "border-red-400"
+                      : "border-outline-variant/40"
+                  }`}
+                  placeholder="000.000.000-00"
+                />
+                {errors.cpf && (
+                  <p className="text-red-500 text-[12px] mt-1.5">{errors.cpf}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-[13px] font-medium text-on-surface-variant mb-1.5">
                   Nome completo
                 </label>
                 <input
@@ -247,35 +326,71 @@ export default function RegisterPage() {
           )}
 
           {currentStep === 2 && (
-            <div>
-              <label className="block text-[13px] font-medium text-on-surface-variant mb-1.5">
-                Area de atuacao
-              </label>
-              <select
-                name="role"
-                value={userData.role}
-                onChange={handleInputChange}
-                className={`w-full px-4 py-3 bg-white border rounded-xl text-[14px] text-on-surface focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 outline-none transition-all appearance-none ${
-                  errors.role
-                    ? "border-red-400"
-                    : "border-outline-variant/40"
-                }`}
-              >
-                <option value="">Selecione sua area</option>
-                <option value="backend">Backend Developer</option>
-                <option value="frontend">Frontend Developer</option>
-                <option value="fullstack">Full Stack Developer</option>
-                <option value="ai">AI Engineer</option>
-                <option value="cloud">Cloud Architect</option>
-                <option value="designer">UI/UX Designer</option>
-                <option value="product">Product Manager</option>
-                <option value="qa">QA Engineer</option>
-                <option value="security">Security Specialist</option>
-                <option value="legal">Especialista em Direito</option>
-              </select>
-              {errors.role && (
-                <p className="text-red-500 text-[12px] mt-1.5">{errors.role}</p>
-              )}
+            <div className="space-y-5">
+              <div>
+                <label className="block text-[13px] font-medium text-on-surface-variant mb-2">
+                  Como você quer participar?
+                </label>
+                <div className="grid grid-cols-1 gap-2.5">
+                  {[
+                    { value: "aluno", label: "Aluno", desc: "Praticar entrevistas com tutores experientes" },
+                    { value: "tutor", label: "Tutor", desc: "Ajudar outros profissionais a se prepararem" },
+                    { value: "ambos", label: "Ambos", desc: "Ser aluno e tutor ao mesmo tempo" },
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => {
+                        setUserData((prev) => ({ ...prev, role: option.value }));
+                        if (errors.role) {
+                          setErrors((prev) => {
+                            const next = { ...prev };
+                            delete next.role;
+                            return next;
+                          });
+                        }
+                      }}
+                      className={`w-full text-left px-4 py-3.5 border rounded-xl text-[14px] transition-all ${
+                        userData.role === option.value
+                          ? "border-orange-500 bg-orange-500/5 text-on-surface"
+                          : "border-outline-variant/40 bg-white text-on-surface-variant hover:border-outline-variant"
+                      }`}
+                    >
+                      <span className="font-medium block">{option.label}</span>
+                      <span className="text-[12px] text-on-surface-variant/70 mt-0.5 block">
+                        {option.desc}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                {errors.role && (
+                  <p className="text-red-500 text-[12px] mt-1.5">{errors.role}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-[13px] font-medium text-on-surface-variant mb-2">
+                  Idiomas que você domina
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {AVAILABLE_LANGUAGES.map((lang) => (
+                    <button
+                      key={lang.id}
+                      type="button"
+                      onClick={() => toggleLanguage(lang.sigla)}
+                      className={`px-3.5 py-2 rounded-full text-[13px] font-medium border transition-all ${
+                        userData.languages.includes(lang.sigla)
+                          ? "border-orange-500 bg-orange-500 text-white"
+                          : "border-outline-variant/40 bg-white text-on-surface-variant hover:border-outline-variant"
+                      }`}
+                    >
+                      {lang.name}
+                    </button>
+                  ))}
+                </div>
+                {errors.languages && (
+                  <p className="text-red-500 text-[12px] mt-1.5">{errors.languages}</p>
+                )}
+              </div>
             </div>
           )}
 
@@ -295,7 +410,7 @@ export default function RegisterPage() {
                       ? "border-red-400"
                       : "border-outline-variant/40"
                   }`}
-                  placeholder="Min. 6 caracteres, 1 letra e 1 numero"
+                  placeholder="Mín. 6 caracteres, 1 letra e 1 número"
                 />
                 {errors.password && (
                   <p className="text-red-500 text-[12px] mt-1.5">
@@ -329,6 +444,10 @@ export default function RegisterPage() {
           )}
         </div>
 
+        {serverError && (
+          <p className="text-red-500 text-[12px] text-center mt-4">{serverError}</p>
+        )}
+
         {/* Navigation */}
         <div className="flex gap-3 mt-8">
           {currentStep > 0 && (
@@ -359,12 +478,12 @@ export default function RegisterPage() {
 
         {/* Footer */}
         <p className="text-center mt-8 text-[13px] text-on-surface-variant">
-          Ja tem uma conta?{" "}
+          Já tem uma conta?{" "}
           <Link
             href="/login"
             className="text-orange-500 font-semibold hover:opacity-60 transition-opacity"
           >
-            Faca login
+            Faça login
           </Link>
         </p>
       </div>

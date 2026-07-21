@@ -1,10 +1,12 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import LoginPage from "@/app/(pages)/login/page";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const mockPush = jest.fn();
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
+  usePathname: () => "/login",
 }));
 
 jest.mock("next/link", () => {
@@ -26,21 +28,26 @@ jest.mock("gsap", () => ({
   from: jest.fn(),
 }));
 
-beforeEach(() => {
-  localStorage.clear();
-  mockPush.mockClear();
-});
+const mockFetch = jest.fn();
+global.fetch = mockFetch;
 
-function registerTestUser() {
-  localStorage.setItem(
-    "users",
-    JSON.stringify([{ email: "user@test.com", password: "senha123", name: "Test User" }])
-  );
+async function renderWithAuth(ui: React.ReactElement) {
+  const result = render(<AuthProvider>{ui}</AuthProvider>);
+  await waitFor(() => {
+    expect(screen.queryByText("Carregando...")).not.toBeInTheDocument();
+  });
+  return result;
 }
 
+beforeEach(() => {
+  mockFetch.mockReset();
+  mockPush.mockClear();
+  mockFetch.mockResolvedValue({ ok: false });
+});
+
 describe("Login Page", () => {
-  it("renders the login form", () => {
-    render(<LoginPage />);
+  it("renders the login form", async () => {
+    await renderWithAuth(<LoginPage />);
     expect(screen.getByText("Bem-vindo de volta")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("seu@email.com")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Sua senha")).toBeInTheDocument();
@@ -48,7 +55,7 @@ describe("Login Page", () => {
   });
 
   it("shows error when fields are empty", async () => {
-    render(<LoginPage />);
+    await renderWithAuth(<LoginPage />);
     const form = screen.getByRole("button", { name: /entrar$/i }).closest("form")!;
     fireEvent.submit(form);
     await waitFor(() => {
@@ -56,30 +63,28 @@ describe("Login Page", () => {
     });
   });
 
-  it("shows error for non-registered email", async () => {
-    registerTestUser();
+  it("shows error for failed login", async () => {
+    await renderWithAuth(<LoginPage />);
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ error: "E-mail ou senha incorretos" }),
+    });
     const user = userEvent.setup();
-    render(<LoginPage />);
-    fireEvent.change(screen.getByPlaceholderText("seu@email.com"), { target: { value: "wrong@test.com" } });
+    fireEvent.change(screen.getByPlaceholderText("seu@email.com"), { target: { value: "user@test.com" } });
     fireEvent.change(screen.getByPlaceholderText("Sua senha"), { target: { value: "senha123" } });
     await user.click(screen.getByRole("button", { name: /entrar$/i }));
-    expect(screen.getByText("Email ou senha incorretos")).toBeInTheDocument();
-  });
-
-  it("shows error for wrong password", async () => {
-    registerTestUser();
-    const user = userEvent.setup();
-    render(<LoginPage />);
-    fireEvent.change(screen.getByPlaceholderText("seu@email.com"), { target: { value: "user@test.com" } });
-    fireEvent.change(screen.getByPlaceholderText("Sua senha"), { target: { value: "wrongpass" } });
-    await user.click(screen.getByRole("button", { name: /entrar$/i }));
-    expect(screen.getByText("Email ou senha incorretos")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("E-mail ou senha incorretos")).toBeInTheDocument();
+    });
   });
 
   it("redirects to dashboard on valid credentials", async () => {
-    registerTestUser();
+    await renderWithAuth(<LoginPage />);
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ user: { id: 1, email: "user@test.com", name: "Test" } }),
+    });
     const user = userEvent.setup();
-    render(<LoginPage />);
     fireEvent.change(screen.getByPlaceholderText("seu@email.com"), { target: { value: "user@test.com" } });
     fireEvent.change(screen.getByPlaceholderText("Sua senha"), { target: { value: "senha123" } });
     await user.click(screen.getByRole("button", { name: /entrar$/i }));
@@ -89,35 +94,40 @@ describe("Login Page", () => {
   });
 
   it("clears error when user starts typing", async () => {
-    registerTestUser();
+    await renderWithAuth(<LoginPage />);
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ error: "E-mail ou senha incorretos" }),
+    });
     const user = userEvent.setup();
-    render(<LoginPage />);
     fireEvent.change(screen.getByPlaceholderText("seu@email.com"), { target: { value: "wrong@test.com" } });
     fireEvent.change(screen.getByPlaceholderText("Sua senha"), { target: { value: "wrongpass" } });
     await user.click(screen.getByRole("button", { name: /entrar$/i }));
-    expect(screen.getByText("Email ou senha incorretos")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("E-mail ou senha incorretos")).toBeInTheDocument();
+    });
     fireEvent.change(screen.getByPlaceholderText("seu@email.com"), { target: { value: "fixed@test.com" } });
-    expect(screen.queryByText("Email ou senha incorretos")).not.toBeInTheDocument();
+    expect(screen.queryByText("E-mail ou senha incorretos")).not.toBeInTheDocument();
   });
 
   it("shows loading state while submitting", async () => {
-    registerTestUser();
+    await renderWithAuth(<LoginPage />);
+    mockFetch.mockReturnValueOnce(new Promise(() => {}));
     const user = userEvent.setup();
-    render(<LoginPage />);
     fireEvent.change(screen.getByPlaceholderText("seu@email.com"), { target: { value: "user@test.com" } });
     fireEvent.change(screen.getByPlaceholderText("Sua senha"), { target: { value: "senha123" } });
     await user.click(screen.getByRole("button", { name: /entrar$/i }));
     expect(screen.getByText("Entrando...")).toBeInTheDocument();
   });
 
-  it("links to register page", () => {
-    render(<LoginPage />);
+  it("links to register page", async () => {
+    await renderWithAuth(<LoginPage />);
     const link = screen.getByRole("link", { name: /cadastre-se/i });
     expect(link).toHaveAttribute("href", "/register");
   });
 
   it("shows password visibility toggle", async () => {
-    render(<LoginPage />);
+    await renderWithAuth(<LoginPage />);
     const input = screen.getByPlaceholderText("Sua senha");
     expect(input).toHaveAttribute("type", "password");
     const toggle = screen.getByText("visibility");

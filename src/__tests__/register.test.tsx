@@ -5,6 +5,7 @@ import RegisterPage from "@/app/(pages)/register/page";
 const mockPush = jest.fn();
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
+  usePathname: () => "/register",
 }));
 
 jest.mock("next/link", () => {
@@ -26,158 +27,169 @@ jest.mock("gsap", () => ({
   from: jest.fn(),
 }));
 
+const mockFetch = jest.fn();
+global.fetch = mockFetch;
+
 beforeEach(() => {
-  localStorage.clear();
+  mockFetch.mockReset();
   mockPush.mockClear();
+  mockFetch.mockResolvedValue({ ok: false, json: async () => ({}) });
 });
 
-function advanceToStep(step: number, user: ReturnType<typeof userEvent.setup>) {
-  // Step 0: email
-  fireEvent.change(screen.getByPlaceholderText("seu@email.com"), { target: { name: "email", value: "test@test.com" } });
-  return user.click(screen.getByRole("button", { name: /continuar/i }));
+function clickContinue() {
+  fireEvent.click(screen.getByRole("button", { name: /continuar/i }));
+}
+
+function fillStep0() {
+  fireEvent.change(screen.getByPlaceholderText("seu@email.com"), {
+    target: { value: "test@email.com" },
+  });
+}
+
+function fillStep1() {
+  fireEvent.change(screen.getByPlaceholderText("000.000.000-00"), {
+    target: { value: "12345678909" },
+  });
+  fireEvent.change(screen.getByPlaceholderText("Seu nome"), {
+    target: { value: "João Silva" },
+  });
+  fireEvent.change(screen.getByPlaceholderText("(11) 99999-0000"), {
+    target: { value: "11999990000" },
+  });
 }
 
 describe("Register Page", () => {
-  it("renders step 0 (email) by default", () => {
+  it("renders the first step", () => {
     render(<RegisterPage />);
     expect(screen.getByText("Criar conta")).toBeInTheDocument();
-    expect(screen.getByText("Comece com seu e-mail")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("seu@email.com")).toBeInTheDocument();
-  });
-
-  it("shows error for empty email", async () => {
-    const user = userEvent.setup();
-    render(<RegisterPage />);
-    await user.click(screen.getByRole("button", { name: /continuar/i }));
-    expect(screen.getByText("Email e obrigatorio")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /continuar/i })).toBeInTheDocument();
   });
 
   it("shows error for invalid email", async () => {
-    const user = userEvent.setup();
     render(<RegisterPage />);
-    fireEvent.change(screen.getByPlaceholderText("seu@email.com"), { target: { name: "email", value: "notanemail" } });
-    await user.click(screen.getByRole("button", { name: /continuar/i }));
-    expect(screen.getByText("Email invalido")).toBeInTheDocument();
+    fireEvent.change(screen.getByPlaceholderText("seu@email.com"), {
+      target: { value: "invalid" },
+    });
+    clickContinue();
+    await waitFor(() => {
+      expect(screen.getByText("Email inválido")).toBeInTheDocument();
+    });
   });
 
-  it("shows error for duplicate email", async () => {
-    localStorage.setItem("users", JSON.stringify([{ email: "taken@test.com", password: "abc123" }]));
-    const user = userEvent.setup();
+  it("validates email is required", async () => {
     render(<RegisterPage />);
-    fireEvent.change(screen.getByPlaceholderText("seu@email.com"), { target: { name: "email", value: "taken@test.com" } });
-    await user.click(screen.getByRole("button", { name: /continuar/i }));
-    expect(screen.getByText("Este email ja esta cadastrado")).toBeInTheDocument();
+    clickContinue();
+    await waitFor(() => {
+      expect(screen.getByText("Email é obrigatório")).toBeInTheDocument();
+    });
   });
 
   it("advances to step 1 with valid email", async () => {
-    const user = userEvent.setup();
     render(<RegisterPage />);
-    fireEvent.change(screen.getByPlaceholderText("seu@email.com"), { target: { name: "email", value: "ok@test.com" } });
-    await user.click(screen.getByRole("button", { name: /continuar/i }));
-    expect(screen.getByText("Seus dados")).toBeInTheDocument();
-  });
-
-  it("shows errors on step 1 for empty name and phone", async () => {
-    const user = userEvent.setup();
-    render(<RegisterPage />);
-    await advanceToStep(1, user);
-    await user.click(screen.getByRole("button", { name: /continuar/i }));
-    expect(screen.getByText("Nome e obrigatorio")).toBeInTheDocument();
-    expect(screen.getByText("Telefone e obrigatorio")).toBeInTheDocument();
-  });
-
-  it("rejects name with numbers", async () => {
-    const user = userEvent.setup();
-    render(<RegisterPage />);
-    await advanceToStep(1, user);
-    fireEvent.change(screen.getByPlaceholderText("Seu nome"), { target: { name: "name", value: "Joao123" } });
-    fireEvent.change(screen.getByPlaceholderText("(11) 99999-0000"), { target: { name: "phone", value: "11999994444" } });
-    await user.click(screen.getByRole("button", { name: /continuar/i }));
-    expect(screen.getByText(/Nome invalido/)).toBeInTheDocument();
-  });
-
-  it("rejects invalid phone format", async () => {
-    const user = userEvent.setup();
-    render(<RegisterPage />);
-    await advanceToStep(1, user);
-    fireEvent.change(screen.getByPlaceholderText("Seu nome"), { target: { name: "name", value: "Joao" } });
-    fireEvent.change(screen.getByPlaceholderText("(11) 99999-0000"), { target: { name: "phone", value: "123" } });
-    await user.click(screen.getByRole("button", { name: /continuar/i }));
-    expect(screen.getByText("Formato: (DDD) 99999-9999")).toBeInTheDocument();
-  });
-
-  it("advances through all steps and submits", async () => {
-    const user = userEvent.setup();
-    render(<RegisterPage />);
-    // Step 0
-    fireEvent.change(screen.getByPlaceholderText("seu@email.com"), { target: { name: "email", value: "new@test.com" } });
-    await user.click(screen.getByRole("button", { name: /continuar/i }));
-    // Step 1
-    fireEvent.change(screen.getByPlaceholderText("Seu nome"), { target: { name: "name", value: "Maria" } });
-    fireEvent.change(screen.getByPlaceholderText("(11) 99999-0000"), { target: { name: "phone", value: "11988887777" } });
-    await user.click(screen.getByRole("button", { name: /continuar/i }));
-    // Step 2
-    fireEvent.change(screen.getByDisplayValue("Selecione sua area"), { target: { name: "role", value: "frontend" } });
-    await user.click(screen.getByRole("button", { name: /continuar/i }));
-    // Step 3
-    fireEvent.change(screen.getByPlaceholderText(/Min/), { target: { name: "password", value: "senha123" } });
-    fireEvent.change(screen.getByPlaceholderText("Repita a senha"), { target: { name: "confirmPassword", value: "senha123" } });
-    await user.click(screen.getByRole("button", { name: /finalizar/i }));
+    fillStep0();
+    clickContinue();
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/login");
+      expect(screen.getByText("Seus dados")).toBeInTheDocument();
     });
   });
 
-  it("rejects short password", async () => {
-    const user = userEvent.setup();
+  it("validates CPF is required on step 1", async () => {
     render(<RegisterPage />);
-    await advanceToStep(1, user);
-    fireEvent.change(screen.getByPlaceholderText("Seu nome"), { target: { name: "name", value: "Joao" } });
-    fireEvent.change(screen.getByPlaceholderText("(11) 99999-0000"), { target: { name: "phone", value: "11999994444" } });
-    await user.click(screen.getByRole("button", { name: /continuar/i }));
-    // Step 2
-    fireEvent.change(screen.getByDisplayValue("Selecione sua area"), { target: { name: "role", value: "backend" } });
-    await user.click(screen.getByRole("button", { name: /continuar/i }));
-    // Step 3
-    fireEvent.change(screen.getByPlaceholderText(/Min/), { target: { name: "password", value: "ab" } });
-    fireEvent.change(screen.getByPlaceholderText("Repita a senha"), { target: { name: "confirmPassword", value: "ab" } });
-    await user.click(screen.getByRole("button", { name: /finalizar/i }));
-    expect(screen.getByText("Minimo 6 caracteres")).toBeInTheDocument();
-  });
-
-  it("rejects mismatched passwords", async () => {
-    const user = userEvent.setup();
-    render(<RegisterPage />);
-    await advanceToStep(1, user);
-    fireEvent.change(screen.getByPlaceholderText("Seu nome"), { target: { name: "name", value: "Joao" } });
-    fireEvent.change(screen.getByPlaceholderText("(11) 99999-0000"), { target: { name: "phone", value: "11999994444" } });
-    await user.click(screen.getByRole("button", { name: /continuar/i }));
-    fireEvent.change(screen.getByDisplayValue("Selecione sua area"), { target: { name: "role", value: "backend" } });
-    await user.click(screen.getByRole("button", { name: /continuar/i }));
-    fireEvent.change(screen.getByPlaceholderText(/Min/), { target: { name: "password", value: "senha123" } });
-    fireEvent.change(screen.getByPlaceholderText("Repita a senha"), { target: { name: "confirmPassword", value: "outra456" } });
-    await user.click(screen.getByRole("button", { name: /finalizar/i }));
-    expect(screen.getByText("Senhas nao coincidem")).toBeInTheDocument();
-  });
-
-  it("stores user in localStorage after submit", async () => {
-    const user = userEvent.setup();
-    render(<RegisterPage />);
-    fireEvent.change(screen.getByPlaceholderText("seu@email.com"), { target: { name: "email", value: "save@test.com" } });
-    await user.click(screen.getByRole("button", { name: /continuar/i }));
-    fireEvent.change(screen.getByPlaceholderText("Seu nome"), { target: { name: "name", value: "Test" } });
-    fireEvent.change(screen.getByPlaceholderText("(11) 99999-0000"), { target: { name: "phone", value: "11988887777" } });
-    await user.click(screen.getByRole("button", { name: /continuar/i }));
-    fireEvent.change(screen.getByDisplayValue("Selecione sua area"), { target: { name: "role", value: "qa" } });
-    await user.click(screen.getByRole("button", { name: /continuar/i }));
-    fireEvent.change(screen.getByPlaceholderText(/Min/), { target: { name: "password", value: "test123" } });
-    fireEvent.change(screen.getByPlaceholderText("Repita a senha"), { target: { name: "confirmPassword", value: "test123" } });
-    await user.click(screen.getByRole("button", { name: /finalizar/i }));
+    fillStep0();
+    clickContinue();
     await waitFor(() => {
-      const users = JSON.parse(localStorage.getItem("users") || "[]");
-      expect(users).toHaveLength(1);
-      expect(users[0].email).toBe("save@test.com");
-      expect(users[0].password).toBe("test123");
+      expect(screen.getByText("Seus dados")).toBeInTheDocument();
     });
+    clickContinue();
+    await waitFor(() => {
+      expect(screen.getByText("CPF é obrigatório")).toBeInTheDocument();
+    });
+  });
+
+  it("validates name is required on step 1", async () => {
+    render(<RegisterPage />);
+    fillStep0();
+    clickContinue();
+    await waitFor(() => {
+      expect(screen.getByText("Seus dados")).toBeInTheDocument();
+    });
+    fireEvent.change(screen.getByPlaceholderText("000.000.000-00"), {
+      target: { value: "12345678909" },
+    });
+    clickContinue();
+    await waitFor(() => {
+      expect(screen.getByText("Nome é obrigatório")).toBeInTheDocument();
+    });
+  });
+
+  it("validates phone is required on step 1", async () => {
+    render(<RegisterPage />);
+    fillStep0();
+    clickContinue();
+    await waitFor(() => {
+      expect(screen.getByText("Seus dados")).toBeInTheDocument();
+    });
+    fireEvent.change(screen.getByPlaceholderText("000.000.000-00"), {
+      target: { value: "12345678909" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("Seu nome"), {
+      target: { value: "João Silva" },
+    });
+    clickContinue();
+    await waitFor(() => {
+      expect(screen.getByText("Telefone é obrigatório")).toBeInTheDocument();
+    });
+  });
+
+  it("advances to step 2 with valid personal data", async () => {
+    render(<RegisterPage />);
+    fillStep0();
+    clickContinue();
+    await waitFor(() => {
+      expect(screen.getByText("Seus dados")).toBeInTheDocument();
+    });
+    fillStep1();
+    clickContinue();
+    await waitFor(() => {
+      expect(screen.getByText("Seu perfil")).toBeInTheDocument();
+    });
+  });
+
+  it("validates role is required on step 2", async () => {
+    render(<RegisterPage />);
+    fillStep0();
+    clickContinue();
+    await waitFor(() => {
+      expect(screen.getByText("Seus dados")).toBeInTheDocument();
+    });
+    fillStep1();
+    clickContinue();
+    await waitFor(() => {
+      expect(screen.getByText("Seu perfil")).toBeInTheDocument();
+    });
+    clickContinue();
+    await waitFor(() => {
+      expect(screen.getByText("Selecione um modo de participação")).toBeInTheDocument();
+    });
+  });
+
+  it("allows going back to previous steps", async () => {
+    render(<RegisterPage />);
+    fillStep0();
+    clickContinue();
+    await waitFor(() => {
+      expect(screen.getByText("Seus dados")).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole("button", { name: /voltar/i }));
+    await waitFor(() => {
+      expect(screen.getByText("Criar conta")).toBeInTheDocument();
+    });
+  });
+
+  it("shows login link", () => {
+    render(<RegisterPage />);
+    const link = screen.getByRole("link", { name: /faça login/i });
+    expect(link).toHaveAttribute("href", "/login");
   });
 });

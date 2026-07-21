@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import {
   LineChart,
   Line,
@@ -19,274 +19,332 @@ const performanceData = [
   { name: "Sem 4", react: 92, automacao: 80, postgres: 85 },
 ];
 
-const recommendedMentors = [
-  {
-    id: 1,
-    name: "Ana Carolina",
-    role: "Tech Lead @ GlobalSoft",
-    tags: ["React", "Next.js"],
-    avatarUrl: "https://placecats.com/502/502",
-  },
-  {
-    id: 2,
-    name: "Marcos Oliveira",
-    role: "Data Engineer @ CloudMasters",
-    tags: ["PostgreSQL", "AWS"],
-    avatarUrl: "https://placecats.com/510/510",
-  },
-  {
-    id: 3,
-    name: "Beatriz Lima",
-    role: "AI & RPA Specialist",
-    tags: ["Power Automate", "LLMs"],
-    avatarUrl: "https://placecats.com/511/511",
-  },
-];
+interface NextSession {
+  id: number;
+  title: string;
+  area: string;
+  dateTime: string;
+  duration: number;
+  platform: string | null;
+  mentorName: string;
+  mentorRole: string;
+  link: string | null;
+}
 
-const recentActivities = [
-  {
-    id: 1,
-    time: "Hoje, 09:15",
-    content: "Relatorio de Feedback apos o simulado de Arquitetura de Software.",
-    link: "Ver Detalhes",
-    isPrimary: true,
-  },
-  {
-    id: 2,
-    time: "Ontem, 16:40",
-    content: 'Voce atingiu 92% de proficiencia no modulo "React & Next.js".',
-    isPrimary: false,
-  },
-  {
-    id: 3,
-    time: "02 Out, 11:20",
-    content: "Nova integracao de LLMs concluida no seu projeto pratico.",
-    isPrimary: false,
-  },
-];
+interface Mentor {
+  id: number;
+  name: string;
+  role: string;
+  tags: string[];
+  price: number;
+  rating: number;
+}
+
+interface DashboardData {
+  user: { name: string };
+  nextSession: NextSession | null;
+  stats: { totalSessoes: number; concluidas: number; horasPratica: number };
+  recentSessions: { id: number; title: string; dateTime: string; status: string; tutorName: string }[];
+  mentors: Mentor[];
+}
+
+const PLATFORM_LABELS: Record<string, string> = {
+  google_meet: "Google Meet",
+  microsoft_teams: "Microsoft Teams",
+  zoom: "Zoom",
+  discord: "Discord",
+};
+
+const STATUS_LABELS: Record<string, { label: string; color: string }> = {
+  agendada: { label: "Agendada", color: "text-blue-600" },
+  em_andamento: { label: "Em Andamento", color: "text-amber-600" },
+  concluida: { label: "Concluída", color: "text-green-600" },
+  cancelada: { label: "Cancelada", color: "text-red-500" },
+};
+
+function formatSessionDate(dateStr: string) {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(now.getDate() + 1);
+
+  const isToday = date.toDateString() === now.toDateString();
+  const isTomorrow = date.toDateString() === tomorrow.toDateString();
+
+  const time = date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+  if (isToday) return `Hoje, ${time}`;
+  if (isTomorrow) return `Amanhã, ${time}`;
+
+  return date.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "short",
+  }) + `, ${time}`;
+}
+
+function formatRelativeDate(dateStr: string) {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return "Hoje";
+  if (diffDays === 1) return "Ontem";
+  if (diffDays < 7) return `Há ${diffDays} dias`;
+  return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+}
 
 export default function Dashboard() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/dashboard", { credentials: "include" })
+      .then(async (res) => {
+        if (res.ok) {
+          const d = await res.json();
+          setData(d);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="p-16 w-full max-w-[1200px] mx-auto min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const firstName = data?.user?.name?.split(" ")[0] || "Usuário";
+  const nextSession = data?.nextSession;
+  const stats = data?.stats || { totalSessoes: 0, concluidas: 0, horasPratica: 0 };
+  const mentors = data?.mentors || [];
+  const recentSessions = data?.recentSessions || [];
+
   return (
     <div className="p-8 sm:p-12 lg:p-16 w-full max-w-[1200px] mx-auto min-h-screen">
-      {/* ================= HEADER ================= */}
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-12">
-        <div>
-          <h1 className="font-headline-lg text-[28px] lg:text-[32px] text-primary font-bold mb-1">
-            Bem-vindo, Bruno.
-          </h1>
-          <p className="text-on-surface-variant text-[14px]">
-            Seu progresso esta semana esta 12% acima da media.
-          </p>
-        </div>
-        <div className="flex items-center gap-3 mt-4 sm:mt-0">
-          <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-surface-container-low transition-colors relative">
-            <span className="material-symbols-outlined text-on-surface-variant/60 text-[20px]">
-              notifications
-            </span>
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-orange-500 rounded-full" />
-          </button>
-          <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-100 relative">
-            <Image
-              src="https://placecats.com/550/550"
-              alt="Avatar"
-              fill
-              sizes="36px"
-              className="object-cover"
-            />
-          </div>
-        </div>
+      {/* Header */}
+      <header className="mb-10">
+        <h1 className="text-[28px] lg:text-[32px] text-primary font-bold mb-1">
+          Bem-vindo, {firstName}.
+        </h1>
+        <p className="text-on-surface-variant text-[14px]">
+          {stats.concluidas > 0
+            ? `Você já completou ${stats.concluidas} sessão${stats.concluidas > 1 ? "ões" : ""}. Continue assim!`
+            : "Comece agendando sua primeira sessão de mentoria."}
+        </p>
       </header>
 
-      {/* ================= PROXIMO AGENDAMENTO ================= */}
-      <section className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white rounded-2xl p-6 sm:p-8 mb-10 relative overflow-hidden">
-        <div className="relative z-10">
-          <span className="inline-block bg-[#50d9fe] text-[#001f27] font-bold text-[11px] px-2.5 py-1 rounded-full mb-4">
-            Proximo Agendamento
-          </span>
-          <h2 className="font-headline-md text-[22px] sm:text-[26px] font-bold mb-1.5">
-            Simulado: Arquitetura Full-Stack
-          </h2>
-          <p className="text-[#a8c8ff] text-[14px] mb-5">
-            Com o mentor Carlos Mendes &middot; AI Engineer
-          </p>
-          <div className="flex flex-wrap items-center gap-5 text-[13px] font-medium text-white/80">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">
-                calendar_month
-              </span>
-              Amanha, 14:00
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">
-                videocam
-              </span>
-              Google Meet
+      {/* Proximo Agendamento */}
+      {nextSession ? (
+        <section className="bg-gradient-to-br from-[#0a1628] via-[#0d2240] to-[#091a36] text-white rounded-3xl p-6 sm:p-8 mb-8 relative overflow-hidden">
+          <div className="relative z-10">
+            <span className="inline-flex items-center gap-1.5 bg-[#50d9fe]/15 text-[#50d9fe] font-semibold text-[11px] px-3 py-1.5 rounded-full mb-4">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#50d9fe] animate-pulse" />
+              Próximo Agendamento
+            </span>
+            <h2 className="text-[22px] sm:text-[26px] font-bold mb-1.5">
+              {nextSession.title}
+            </h2>
+            <p className="text-white/50 text-[14px] mb-5">
+              Com {nextSession.mentorName} · {nextSession.mentorRole}
+            </p>
+            <div className="flex flex-wrap items-center gap-5 text-[13px] font-medium text-white/60">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[16px]">
+                  calendar_month
+                </span>
+                {formatSessionDate(nextSession.dateTime)}
+              </div>
+              {nextSession.platform && (
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[16px]">
+                    videocam
+                  </span>
+                  {PLATFORM_LABELS[nextSession.platform] || nextSession.platform}
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[16px]">
+                  schedule
+                </span>
+                {nextSession.duration}min
+              </div>
             </div>
           </div>
-        </div>
-        <button className="absolute right-6 sm:right-8 top-1/2 -translate-y-1/2 bg-white text-primary font-semibold px-5 py-2.5 rounded-full text-[13px] flex items-center gap-2 hover:bg-gray-100 transition-colors z-10">
-          Ingressar
-          <span className="material-symbols-outlined text-[16px]">
-            arrow_forward
-          </span>
-        </button>
-        <div className="absolute right-0 top-0 w-56 h-56 bg-white opacity-5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
-      </section>
-
-      {/* ================= STATS ================= */}
-      <section className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
-        <div className="bg-white border border-outline-variant/30 rounded-2xl p-6">
-          <p className="text-[12px] font-medium text-on-surface-variant/60 uppercase tracking-wider mb-3">
-            Tempo de Estudo
-          </p>
-          <p className="text-[28px] font-bold text-primary">18h 45m</p>
-          <p className="text-[12px] text-orange-500 font-medium mt-1">
-            +2.4h hoje
-          </p>
-        </div>
-
-        <div className="bg-white border border-outline-variant/30 rounded-2xl p-6">
-          <p className="text-[12px] font-medium text-on-surface-variant/60 uppercase tracking-wider mb-3">
-            Entrevistas Practicadas
-          </p>
-          <p className="text-[28px] font-bold text-primary">12</p>
-          <p className="text-[12px] text-orange-500 font-medium mt-1">
-            +2 nesta semana
-          </p>
-        </div>
-
-        <div className="bg-white border border-outline-variant/30 rounded-2xl p-6">
-          <p className="text-[12px] font-medium text-on-surface-variant/60 uppercase tracking-wider mb-3">
-            Aluno Nota
-          </p>
-          <p className="text-[28px] font-bold text-primary">
-            10{" "}
-            <span className="text-[14px] font-normal text-on-surface-variant/50">
-              Excelente
+          <Link
+            href="/agendamentos"
+            className="absolute right-6 sm:right-8 top-1/2 -translate-y-1/2 bg-white text-primary font-semibold px-5 py-2.5 rounded-full text-[13px] flex items-center gap-2 hover:bg-gray-100 transition-colors z-10 no-underline"
+          >
+            Ver Detalhes
+            <span className="material-symbols-outlined text-[16px]">
+              arrow_forward
             </span>
-          </p>
-          <p className="text-[12px] text-orange-500 font-medium mt-1">
-            Top 10%
-          </p>
-        </div>
-      </section>
+          </Link>
+          <div className="absolute -right-20 -top-20 w-72 h-72 bg-[#50d9fe]/5 rounded-full blur-3xl" />
+          <div className="absolute right-40 -bottom-32 w-96 h-96 bg-[#50d9fe]/3 rounded-full blur-3xl" />
+        </section>
+      ) : (
+        <section className="bg-gradient-to-br from-[#0a1628] via-[#0d2240] to-[#091a36] text-white rounded-3xl p-6 sm:p-8 mb-8 relative overflow-hidden">
+          <div className="relative z-10">
+            <h2 className="text-[22px] sm:text-[26px] font-bold mb-2">
+              Nenhuma sessão agendada
+            </h2>
+            <p className="text-white/50 text-[14px] mb-5">
+              Explore nossos mentores e agende sua primeira sessão.
+            </p>
+            <Link
+              href="/explore"
+              className="inline-flex items-center gap-2 bg-orange-500 text-white font-semibold px-6 py-2.5 rounded-full text-[13px] hover:bg-orange-600 transition-colors no-underline"
+            >
+              <span className="material-symbols-outlined text-[16px]">explore</span>
+              Explorar Mentores
+            </Link>
+          </div>
+          <div className="absolute -right-20 -top-20 w-72 h-72 bg-[#50d9fe]/5 rounded-full blur-3xl" />
+        </section>
+      )}
 
-      {/* ================= MAIN GRID ================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        {/* Left Column */}
-        <div className="lg:col-span-2 flex flex-col gap-10">
-          {/* Chart */}
-          <section>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-[18px] font-semibold text-primary">
-                Evolucao de Habilidades
-              </h2>
-              <span className="text-[13px] text-on-surface-variant/50 font-medium">
-                Ultimas 4 semanas
+      {/* Stats */}
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+        <div className="bg-white border border-outline-variant/30 rounded-2xl p-5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+              <span className="material-symbols-outlined text-blue-600 text-[20px]">
+                schedule
               </span>
             </div>
+            <span className="text-[13px] font-medium text-on-surface-variant">
+              Tempo de Prática
+            </span>
+          </div>
+          <p className="text-[26px] font-bold text-primary">
+            {stats.horasPratica}h
+          </p>
+        </div>
 
-            <div className="bg-white border border-outline-variant/30 rounded-2xl p-6 h-[300px]">
+        <div className="bg-white border border-outline-variant/30 rounded-2xl p-5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
+              <span className="material-symbols-outlined text-orange-500 text-[20px]">
+                target
+              </span>
+            </div>
+            <span className="text-[13px] font-medium text-on-surface-variant">
+              Sessões Realizadas
+            </span>
+          </div>
+          <p className="text-[26px] font-bold text-primary">{stats.concluidas}</p>
+        </div>
+
+        <div className="bg-white border border-outline-variant/30 rounded-2xl p-5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+              <span className="material-symbols-outlined text-emerald-600 text-[20px]">
+                calendar_month
+              </span>
+            </div>
+            <span className="text-[13px] font-medium text-on-surface-variant">
+              Total de Agendamentos
+            </span>
+          </div>
+          <p className="text-[26px] font-bold text-primary">{stats.totalSessoes}</p>
+        </div>
+      </section>
+
+      {/* Main Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left */}
+        <div className="lg:col-span-2 flex flex-col gap-8">
+          {/* Chart */}
+          <section className="bg-white border border-outline-variant/30 rounded-2xl p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-[17px] font-semibold text-primary">
+                Evolução de Habilidades
+              </h2>
+              <span className="text-[12px] text-on-surface-variant/50 font-medium">
+                Últimas 4 semanas
+              </span>
+            </div>
+            <div className="h-[260px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                   data={performanceData}
                   margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                 >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="#e1e3e4"
-                  />
-                  <XAxis
-                    dataKey="name"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#737780", fontSize: 11 }}
-                    dy={10}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#737780", fontSize: 11 }}
-                    domain={[0, 100]}
-                  />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e1e3e4" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "#737780", fontSize: 11 }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: "#737780", fontSize: 11 }} domain={[0, 100]} />
                   <Tooltip
                     contentStyle={{
-                      borderRadius: "10px",
+                      borderRadius: "12px",
                       border: "1px solid #e1e3e4",
-                      boxShadow: "none",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
                       fontSize: "13px",
+                      padding: "10px 14px",
                     }}
                   />
-                  <Line
-                    type="monotone"
-                    dataKey="react"
-                    name="React & Next.js"
-                    stroke="#191c1d"
-                    strokeWidth={2}
-                    dot={{ r: 3, strokeWidth: 2 }}
-                    activeDot={{ r: 5 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="automacao"
-                    name="RPA & Automacao"
-                    stroke="#ea580c"
-                    strokeWidth={2}
-                    dot={{ r: 3, strokeWidth: 2 }}
-                    activeDot={{ r: 5 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="postgres"
-                    name="PostgreSQL"
-                    stroke="#a8c8ff"
-                    strokeWidth={2}
-                    dot={{ r: 3, strokeWidth: 2 }}
-                    activeDot={{ r: 5 }}
-                  />
+                  <Line type="monotone" dataKey="react" name="React & Next.js" stroke="#191c1d" strokeWidth={2} dot={{ r: 3, strokeWidth: 2 }} activeDot={{ r: 5 }} />
+                  <Line type="monotone" dataKey="automacao" name="RPA & Automação" stroke="#ea580c" strokeWidth={2} dot={{ r: 3, strokeWidth: 2 }} activeDot={{ r: 5 }} />
+                  <Line type="monotone" dataKey="postgres" name="PostgreSQL" stroke="#a8c8ff" strokeWidth={2} dot={{ r: 3, strokeWidth: 2 }} activeDot={{ r: 5 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           </section>
 
-          {/* Recommended Mentors */}
-          <section>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-[18px] font-semibold text-primary">
-                Mentores Recomendados
-              </h2>
-              <Link
-                href="/explore"
-                className="text-[13px] font-medium text-orange-500 hover:opacity-60 transition-opacity"
-              >
-                Ver todos
-              </Link>
-            </div>
-
-            <div className="divide-y divide-outline-variant/30">
-              {recommendedMentors.map((mentor) => (
-                <div
-                  key={mentor.id}
-                  className="flex items-center gap-4 py-5 group cursor-pointer"
+          {/* Mentors */}
+          {mentors.length > 0 && (
+            <section>
+              <div className="flex justify-between items-center mb-5">
+                <h2 className="text-[17px] font-semibold text-primary">
+                  Mentores Recomendados
+                </h2>
+                <Link
+                  href="/explore"
+                  className="text-[13px] font-medium text-orange-500 hover:opacity-60 transition-opacity"
                 >
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 relative">
-                    <Image
-                      src={mentor.avatarUrl}
-                      alt={mentor.name}
-                      fill
-                      sizes="48px"
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-[15px] font-semibold text-primary group-hover:text-orange-500 transition-colors truncate">
-                      {mentor.name}
-                    </h4>
-                    <p className="text-[13px] text-on-surface-variant">
-                      {mentor.role}
-                    </p>
-                    <div className="flex gap-1.5 mt-1.5">
+                  Ver todos
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {mentors.map((mentor) => (
+                  <Link
+                    key={mentor.id}
+                    href={`/mentor/${mentor.id}`}
+                    className="bg-white border border-outline-variant/30 rounded-2xl p-5 hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)] transition-shadow no-underline block group"
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center flex-shrink-0">
+                        <span className="text-[13px] font-bold text-primary">
+                          {mentor.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                        </span>
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-[14px] font-semibold text-primary truncate group-hover:text-orange-500 transition-colors">
+                          {mentor.name}
+                        </h4>
+                        <p className="text-[12px] text-on-surface-variant truncate">
+                          {mentor.role}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-[12px] font-medium text-orange-500">
+                        {mentor.rating > 0 ? mentor.rating.toFixed(1) : "Novo"}
+                      </span>
+                      {mentor.rating > 0 && (
+                        <span className="material-symbols-outlined text-[12px] text-orange-500" style={{ fontVariationSettings: "'FILL' 1" }}>
+                          star
+                        </span>
+                      )}
+                      <span className="text-[12px] text-on-surface-variant/50 ml-auto">
+                        R$ {mentor.price}/sessão
+                      </span>
+                    </div>
+                    <div className="flex gap-1.5">
                       {mentor.tags.map((tag) => (
                         <span
                           key={tag}
@@ -296,74 +354,105 @@ export default function Dashboard() {
                         </span>
                       ))}
                     </div>
-                  </div>
-                  <span className="material-symbols-outlined text-[18px] text-on-surface/15 group-hover:text-on-surface/40 transition-colors">
-                    arrow_forward
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
 
-        {/* Right Column */}
-        <div className="flex flex-col gap-10">
-          {/* Atividade Recente */}
-          <section>
-            <h2 className="text-[18px] font-semibold text-primary mb-6">
-              Atividade Recente
-            </h2>
-
-            <div className="relative border-l border-outline-variant/30 ml-2 space-y-6">
-              {recentActivities.map((activity) => (
-                <div key={activity.id} className="relative pl-6">
-                  <div
-                    className={`absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full border-2 border-white ${
-                      activity.isPrimary
-                        ? "bg-orange-500"
-                        : "bg-outline-variant/60"
-                    }`}
-                  />
-                  <span className="text-[11px] text-on-surface-variant/50 font-medium block mb-0.5">
-                    {activity.time}
-                  </span>
-                  <p
-                    className={`text-[13px] leading-relaxed ${
-                      activity.isPrimary
-                        ? "text-primary font-medium"
-                        : "text-on-surface-variant"
-                    }`}
-                  >
-                    {activity.content}
-                  </p>
-                  {activity.link && (
-                    <a
-                      href="#"
-                      className="text-[12px] font-medium text-orange-500 mt-1.5 inline-block hover:opacity-60 transition-opacity"
-                    >
-                      {activity.link}
-                    </a>
-                  )}
-                </div>
-              ))}
+        {/* Right */}
+        <div className="flex flex-col gap-8">
+          {/* Recent Sessions */}
+          <section className="bg-white border border-outline-variant/30 rounded-2xl p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-[17px] font-semibold text-primary">
+                Sessões Recentes
+              </h2>
+              <Link
+                href="/agendamentos"
+                className="text-[12px] font-medium text-orange-500 hover:opacity-60 transition-opacity"
+              >
+                Ver todas
+              </Link>
             </div>
+
+            {recentSessions.length === 0 ? (
+              <p className="text-[13px] text-on-surface-variant/50">
+                Nenhuma sessão registrada ainda.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {recentSessions.map((session) => {
+                  const status = STATUS_LABELS[session.status] || STATUS_LABELS.agendada;
+                  return (
+                    <div key={session.id} className="flex items-start gap-3">
+                      <div className="w-2 h-2 rounded-full bg-orange-500 mt-1.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <p className="text-[13px] font-medium text-primary truncate">
+                            {session.title}
+                          </p>
+                          <span className={`text-[11px] font-medium ${status.color}`}>
+                            {status.label}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-on-surface-variant/50">
+                          {session.tutorName} · {formatRelativeDate(session.dateTime)}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </section>
 
-          {/* Desafio */}
-          <section className="bg-surface-container-low border border-outline-variant/30 rounded-2xl p-6">
-            <span className="material-symbols-outlined text-[24px] text-on-surface/20 mb-3 block">
-              lightbulb
-            </span>
-            <h3 className="text-[15px] font-semibold text-primary mb-1.5">
-              Novo Desafio
-            </h3>
-            <p className="text-[13px] text-on-surface-variant leading-relaxed mb-4">
-              Complete o simulado de arquitetura de software para desbloquear
-              recompensas exclusivas.
-            </p>
-            <button className="text-[13px] font-semibold text-orange-500 hover:opacity-60 transition-opacity">
-              Comecar Agora &rarr;
-            </button>
+          {/* Quick Actions */}
+          <section className="bg-surface-container-low rounded-2xl p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="material-symbols-outlined text-orange-500 text-[20px]">
+                bolt
+              </span>
+              <h3 className="text-[15px] font-semibold text-primary">
+                Ações Rápidas
+              </h3>
+            </div>
+            <div className="space-y-2">
+              <Link
+                href="/explore"
+                className="flex items-center gap-3 px-4 py-3 bg-white rounded-xl border border-outline-variant/20 hover:border-orange-500/30 transition-colors no-underline group"
+              >
+                <span className="material-symbols-outlined text-[18px] text-on-surface-variant/40 group-hover:text-orange-500 transition-colors">
+                  search
+                </span>
+                <span className="text-[13px] font-medium text-primary">
+                  Explorar novos mentores
+                </span>
+              </Link>
+              <Link
+                href="/agendamentos"
+                className="flex items-center gap-3 px-4 py-3 bg-white rounded-xl border border-outline-variant/20 hover:border-orange-500/30 transition-colors no-underline group"
+              >
+                <span className="material-symbols-outlined text-[18px] text-on-surface-variant/40 group-hover:text-orange-500 transition-colors">
+                  calendar_month
+                </span>
+                <span className="text-[13px] font-medium text-primary">
+                  Ver meus agendamentos
+                </span>
+              </Link>
+              <Link
+                href="/relatorios"
+                className="flex items-center gap-3 px-4 py-3 bg-white rounded-xl border border-outline-variant/20 hover:border-orange-500/30 transition-colors no-underline group"
+              >
+                <span className="material-symbols-outlined text-[18px] text-on-surface-variant/40 group-hover:text-orange-500 transition-colors">
+                  bar_chart
+                </span>
+                <span className="text-[13px] font-medium text-primary">
+                  Acessar relatórios
+                </span>
+              </Link>
+            </div>
           </section>
         </div>
       </div>
