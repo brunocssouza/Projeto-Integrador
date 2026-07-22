@@ -188,7 +188,7 @@ export default function MentorProfilePage({ params }: { params: Promise<{ id: st
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          tutor_id: Number(id),
+          mentor_id: Number(id),
           titulo: sessionTitle,
           area: sessionArea,
           data_hora: dateStr,

@@ -32,7 +32,7 @@ export default function Sidebar() {
       pathname.startsWith("/mentor/avaliacoes") ||
       pathname.startsWith("/mentor/configuracoes")) &&
     pathname !== "/mentor/setup";
-  const userIsTutor = user?.is_tutor ?? false;
+  const userIsMentor = user?.is_mentor ?? false;
   const perfilCompleto = user?.perfil_mentor_completo ?? false;
 
   const navItems = isMentorMode ? NAV_ITEMS.mentor : NAV_ITEMS.student;
@@ -61,7 +61,7 @@ export default function Sidebar() {
       </div>
 
       {/* Mode Toggle */}
-      {userIsTutor && (
+      {userIsMentor && (
         <div className="px-4 mb-2">
           <div className="bg-surface-container-low rounded-xl p-1 flex">
             <Link
@@ -82,7 +82,7 @@ export default function Sidebar() {
                   : "text-on-surface-variant hover:text-on-surface"
               }`}
             >
-              Tutor
+              Mentor
             </Link>
           </div>
         </div>
@@ -91,7 +91,7 @@ export default function Sidebar() {
       {/* Nav */}
       <nav className="px-3 flex-1 mt-4">
         <p className="text-[11px] font-semibold text-on-surface-variant/40 uppercase tracking-widest px-3 mb-2">
-          {isMentorMode ? "Tutor" : "Menu"}
+          {isMentorMode ? "Mentor" : "Menu"}
         </p>
         <div className="space-y-0.5">
           {navItems.map((item) => {

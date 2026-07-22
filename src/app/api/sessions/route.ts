@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const statusFilter = url.searchParams.get("status");
 
     const [userRows] = await pool.query<RowDataPacket[]>(
-      "SELECT is_aluno, is_tutor FROM Usuario WHERE usuario_id = ?",
+      "SELECT is_aluno, is_mentor FROM Usuario WHERE usuario_id = ?",
       [payload.userId]
     );
 
@@ -32,29 +32,29 @@ export async function GET(request: NextRequest) {
     let query = "";
     let params: (string | number)[] = [];
 
-    if (user.is_tutor && !user.is_aluno) {
+    if (user.is_mentor && !user.is_aluno) {
       query = `
         SELECT s.sessao_id, s.titulo, s.area, s.data_hora, s.duracao_min,
                s.status, s.status_reserva, s.plataforma_video, s.link_reuniao,
-               s.joined_aluno_at, s.joined_tutor_at, s.criado_em,
+               s.joined_aluno_at, s.joined_mentor_at, s.criado_em,
                u.nome AS aluno_nome, u.email AS aluno_email,
-               s.aluno_id, s.tutor_id
+               s.aluno_id, s.mentor_id
         FROM Sessao s
         JOIN Aluno a ON a.aluno_id = s.aluno_id
         JOIN Usuario u ON u.usuario_id = a.usuario_id
-        WHERE s.tutor_id = (SELECT tutor_id FROM Tutor WHERE usuario_id = ?)
+        WHERE s.mentor_id = (SELECT mentor_id FROM Mentor WHERE usuario_id = ?)
       `;
       params = [payload.userId];
     } else {
       query = `
         SELECT s.sessao_id, s.titulo, s.area, s.data_hora, s.duracao_min,
                s.status, s.status_reserva, s.plataforma_video, s.link_reuniao,
-               s.joined_aluno_at, s.joined_tutor_at, s.criado_em,
-               u.nome AS tutor_nome, u.email AS tutor_email,
-               t.cargo AS tutor_cargo, t.empresa AS tutor_empresa,
-               s.aluno_id, s.tutor_id
+               s.joined_aluno_at, s.joined_mentor_at, s.criado_em,
+               u.nome AS mentor_nome, u.email AS mentor_email,
+               t.cargo AS mentor_cargo, t.empresa AS mentor_empresa,
+               s.aluno_id, s.mentor_id
         FROM Sessao s
-        JOIN Tutor t ON t.tutor_id = s.tutor_id
+        JOIN Mentor t ON t.mentor_id = s.mentor_id
         JOIN Usuario u ON u.usuario_id = t.usuario_id
         WHERE s.aluno_id = (SELECT aluno_id FROM Aluno WHERE usuario_id = ?)
       `;
@@ -98,8 +98,8 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { tutor_id, titulo, area, data_hora, duracao_min, plataforma_video } = body as {
-      tutor_id: number;
+    const { mentor_id, titulo, area, data_hora, duracao_min, plataforma_video } = body as {
+      mentor_id: number;
       titulo: string;
       area: string;
       data_hora: string;
@@ -107,9 +107,21 @@ export async function POST(request: NextRequest) {
       plataforma_video?: string;
     };
 
-    if (!tutor_id || !titulo || !area || !data_hora) {
+    if (!mentor_id || !titulo || !area || !data_hora) {
       return Response.json(
-        { error: "Campos obrigatórios: tutor_id, titulo, area, data_hora" },
+        { error: "Campos obrigatórios: mentor_id, titulo, area, data_hora" },
+        { status: 400 }
+      );
+    }
+
+    const sessionDate = new Date(data_hora);
+    const now = new Date();
+    const diffMs = sessionDate.getTime() - now.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
+
+    if (diffHours < 24) {
+      return Response.json(
+        { error: "O agendamento deve ter no mínimo 24 horas de antecedência" },
         { status: 400 }
       );
     }
@@ -128,19 +140,18 @@ export async function POST(request: NextRequest) {
 
     const alunoId = alunoRows[0].aluno_id;
 
-    const [tutorRows] = await pool.query<RowDataPacket[]>(
-      "SELECT tutor_id, preco_por_sessao FROM Tutor WHERE tutor_id = ?",
-      [tutor_id]
+    const [MentorRows] = await pool.query<RowDataPacket[]>(
+      "SELECT mentor_id, preco_por_sessao FROM Mentor WHERE mentor_id = ?",
+      [mentor_id]
     );
 
-    if (tutorRows.length === 0) {
+    if (MentorRows.length === 0) {
       return Response.json(
-        { error: "Tutor não encontrado" },
+        { error: "Mentor não encontrado" },
         { status: 404 }
       );
     }
 
-    const sessionDate = new Date(data_hora);
     const dayOfWeek = sessionDate.getDay();
     const hours = String(sessionDate.getHours()).padStart(2, "0");
     const minutes = String(sessionDate.getMinutes()).padStart(2, "0");
@@ -148,37 +159,37 @@ export async function POST(request: NextRequest) {
 
     const [availRows] = await pool.query<RowDataPacket[]>(
       `SELECT disponibilidade_id FROM Disponibilidade
-       WHERE tutor_id = ? AND dia_semana = ? AND hora_inicio <= ? AND hora_fim > ? AND ativo = 1`,
-      [tutor_id, dayOfWeek, timeStr, timeStr]
+       WHERE mentor_id = ? AND dia_semana = ? AND hora_inicio <= ? AND hora_fim > ? AND ativo = 1`,
+      [mentor_id, dayOfWeek, timeStr, timeStr]
     );
 
     if (availRows.length === 0) {
       return Response.json(
-        { error: "Tutor não disponível neste horário" },
+        { error: "Mentor não disponível neste horário" },
         { status: 400 }
       );
     }
 
     const [existingSessions] = await pool.query<RowDataPacket[]>(
       `SELECT sessao_id FROM Sessao
-       WHERE tutor_id = ? AND data_hora = ? AND status NOT IN ('cancelada')
+       WHERE mentor_id = ? AND data_hora = ? AND status NOT IN ('cancelada')
        AND status_reserva != 'recusada'`,
-      [tutor_id, data_hora]
+      [mentor_id, data_hora]
     );
 
     if (existingSessions.length > 0) {
       return Response.json(
-        { error: "Tutor já possui sessão agendada neste horário" },
+        { error: "Mentor já possui sessão agendada neste horário" },
         { status: 400 }
       );
     }
 
     const [result] = await pool.query<ResultSetHeader>(
-      `INSERT INTO Sessao (aluno_id, tutor_id, titulo, area, data_hora, duracao_min, status, status_reserva, plataforma_video)
+      `INSERT INTO Sessao (aluno_id, mentor_id, titulo, area, data_hora, duracao_min, status, status_reserva, plataforma_video)
        VALUES (?, ?, ?, ?, ?, ?, 'agendada', 'pendente', ?)`,
       [
         alunoId,
-        tutor_id,
+        mentor_id,
         titulo,
         area,
         data_hora,
@@ -192,7 +203,7 @@ export async function POST(request: NextRequest) {
     await pool.query<ResultSetHeader>(
       `INSERT INTO Pagamento (sessao_id, valor, forma_pagamento, status)
        VALUES (?, ?, 'pix', 'pendente')`,
-      [sessaoId, tutorRows[0].preco_por_sessao]
+      [sessaoId, MentorRows[0].preco_por_sessao]
     );
 
     return Response.json(

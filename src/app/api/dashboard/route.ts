@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     }
 
     const [userRows] = await pool.query<RowDataPacket[]>(
-      "SELECT is_aluno, is_tutor, nome FROM Usuario WHERE usuario_id = ?",
+      "SELECT is_aluno, is_mentor, nome FROM Usuario WHERE usuario_id = ?",
       [payload.userId]
     );
 
@@ -43,9 +43,9 @@ export async function GET(request: NextRequest) {
       const [nextRows] = await pool.query<RowDataPacket[]>(
         `SELECT s.sessao_id, s.titulo, s.area, s.data_hora, s.duracao_min,
                 s.status, s.status_reserva, s.plataforma_video, s.link_reuniao,
-                u.nome AS tutor_nome, t.cargo AS tutor_cargo
+                u.nome AS mentor_nome, t.cargo AS mentor_cargo
          FROM Sessao s
-         JOIN Tutor t ON t.tutor_id = s.tutor_id
+         JOIN Mentor t ON t.mentor_id = s.mentor_id
          JOIN Usuario u ON u.usuario_id = t.usuario_id
          WHERE s.aluno_id = ? AND s.status IN ('agendada', 'em_andamento')
          AND s.status_reserva = 'aprovada'
@@ -80,9 +80,9 @@ export async function GET(request: NextRequest) {
       // Recent sessions
       const [recentRows] = await pool.query<RowDataPacket[]>(
         `SELECT s.sessao_id, s.titulo, s.data_hora, s.status,
-                u.nome AS tutor_nome
+                u.nome AS mentor_nome
          FROM Sessao s
-         JOIN Tutor t ON t.tutor_id = s.tutor_id
+         JOIN Mentor t ON t.mentor_id = s.mentor_id
          JOIN Usuario u ON u.usuario_id = t.usuario_id
          WHERE s.aluno_id = ?
          ORDER BY s.data_hora DESC
@@ -95,9 +95,9 @@ export async function GET(request: NextRequest) {
 
     // Recommended mentors (top rated, not the user themselves)
     const [mentors] = await pool.query<RowDataPacket[]>(
-      `SELECT t.tutor_id, u.nome, t.cargo, t.empresa, t.preco_por_sessao,
-              COALESCE((SELECT AVG(nota) FROM Avaliacao_Tutor WHERE tutor_id = t.tutor_id), 0) AS rating
-       FROM Tutor t
+      `SELECT t.mentor_id, u.nome, t.cargo, t.empresa, t.preco_por_sessao,
+              COALESCE((SELECT AVG(nota) FROM Avaliacao_Mentor WHERE mentor_id = t.mentor_id), 0) AS rating
+       FROM Mentor t
        JOIN Usuario u ON u.usuario_id = t.usuario_id
        WHERE t.usuario_id != ?
        ORDER BY rating DESC
@@ -108,13 +108,13 @@ export async function GET(request: NextRequest) {
     const mentorTechs = await Promise.all(
       mentors.map(async (m: RowDataPacket) => {
         const [techs] = await pool.query<RowDataPacket[]>(
-          `SELECT te.nome FROM Tutor_Tecnologia tt
+          `SELECT te.nome FROM Mentor_Tecnologia tt
            JOIN Tecnologia te ON te.tecnologia_id = tt.tecnologia_id
-           WHERE tt.tutor_id = ? LIMIT 3`,
-          [m.tutor_id]
+           WHERE tt.mentor_id = ? LIMIT 3`,
+          [m.mentor_id]
         );
         return {
-          id: m.tutor_id,
+          id: m.mentor_id,
           name: m.nome,
           role: `${m.cargo}${m.empresa ? ` @ ${m.empresa}` : ""}`,
           tags: techs.map((t: RowDataPacket) => t.nome),
@@ -134,8 +134,8 @@ export async function GET(request: NextRequest) {
             dateTime: nextSession.data_hora,
             duration: nextSession.duracao_min,
             platform: nextSession.plataforma_video,
-            mentorName: nextSession.tutor_nome,
-            mentorRole: nextSession.tutor_cargo,
+            mentorName: nextSession.mentor_nome,
+            mentorRole: nextSession.mentor_cargo,
             link: nextSession.link_reuniao,
           }
         : null,
@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
         title: s.titulo,
         dateTime: s.data_hora,
         status: s.status,
-        tutorName: s.tutor_nome,
+        mentorName: s.mentor_nome,
       })),
       mentors: mentorTechs,
     });

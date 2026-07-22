@@ -52,12 +52,12 @@ export async function POST(request: NextRequest) {
 
     const hashedPassword = await hashPassword(password);
     const isAluno = role === "aluno" || role === "ambos" ? 1 : 0;
-    const isTutor = role === "tutor" || role === "ambos" ? 1 : 0;
+    const isMentor = role === "mentor" || role === "ambos" ? 1 : 0;
 
     const [result] = await pool.query<ResultSetHeader>(
-      `INSERT INTO Usuario (cpf, nome, email, telefone, senha_hash, is_aluno, is_tutor, perfil_mentor_completo)
+      `INSERT INTO Usuario (cpf, nome, email, telefone, senha_hash, is_aluno, is_mentor, perfil_mentor_completo)
        VALUES (?, ?, ?, ?, ?, ?, ?, 0)`,
-      [cpf, name, email, phone, hashedPassword, isAluno, isTutor]
+      [cpf, name, email, phone, hashedPassword, isAluno, isMentor]
     );
 
     const userId = result.insertId;

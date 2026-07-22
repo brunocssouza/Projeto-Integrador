@@ -3,6 +3,28 @@ import pool from "@/lib/db";
 import { verifyToken } from "@/lib/auth";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 
+async function verifySessionOwnership(
+  sessaoId: number,
+  userId: number
+): Promise<{ isOwner: boolean; isMentor: boolean; isAluno: boolean }> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT
+       CASE WHEN t.usuario_id = ? THEN 1 ELSE 0 END AS is_mentor_owner,
+       CASE WHEN a.usuario_id = ? THEN 1 ELSE 0 END AS is_aluno_owner
+     FROM Sessao s
+     LEFT JOIN Mentor t ON t.mentor_id = s.mentor_id
+     LEFT JOIN Aluno a ON a.aluno_id = s.aluno_id
+     WHERE s.sessao_id = ?`,
+    [userId, userId, sessaoId]
+  );
+  if (rows.length === 0) return { isOwner: false, isMentor: false, isAluno: false };
+  return {
+    isOwner: rows[0].is_mentor_owner === 1 || rows[0].is_aluno_owner === 1,
+    isMentor: rows[0].is_mentor_owner === 1,
+    isAluno: rows[0].is_aluno_owner === 1,
+  };
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -24,12 +46,12 @@ export async function GET(
     const [rows] = await pool.query<RowDataPacket[]>(
       `SELECT s.*,
               ua.nome AS aluno_nome, ua.email AS aluno_email,
-              ut.nome AS tutor_nome, ut.email AS tutor_email,
-              t.cargo AS tutor_cargo, t.empresa AS tutor_empresa
+              ut.nome AS mentor_nome, ut.email AS mentor_email,
+              t.cargo AS mentor_cargo, t.empresa AS mentor_empresa
        FROM Sessao s
        JOIN Aluno a ON a.aluno_id = s.aluno_id
        JOIN Usuario ua ON ua.usuario_id = a.usuario_id
-       JOIN Tutor t ON t.tutor_id = s.tutor_id
+       JOIN Mentor t ON t.mentor_id = s.mentor_id
        JOIN Usuario ut ON ut.usuario_id = t.usuario_id
        WHERE s.sessao_id = ?`,
       [sessaoId]
@@ -84,17 +106,15 @@ export async function PATCH(
 
     const sessao = sessaoRows[0];
 
-    const [userRows] = await pool.query<RowDataPacket[]>(
-      "SELECT is_aluno, is_tutor FROM Usuario WHERE usuario_id = ?",
-      [payload.userId]
-    );
+    const ownership = await verifySessionOwnership(sessaoId, payload.userId);
 
-    const isTutor = userRows[0]?.is_tutor === 1;
-    const isAluno = userRows[0]?.is_aluno === 1;
+    if (!ownership.isOwner) {
+      return Response.json({ error: "Não autorizado" }, { status: 403 });
+    }
 
     if (action === "approve") {
-      if (!isTutor) {
-        return Response.json({ error: "Apenas tutores podem aprovar" }, { status: 403 });
+      if (!ownership.isMentor) {
+        return Response.json({ error: "Apenas mentores podem aprovar" }, { status: 403 });
       }
       if (sessao.status_reserva !== "pendente") {
         return Response.json({ error: "Sessão não está pendente" }, { status: 400 });
@@ -107,8 +127,8 @@ export async function PATCH(
     }
 
     if (action === "decline") {
-      if (!isTutor) {
-        return Response.json({ error: "Apenas tutores podem recusar" }, { status: 403 });
+      if (!ownership.isMentor) {
+        return Response.json({ error: "Apenas mentores podem recusar" }, { status: 403 });
       }
       if (sessao.status_reserva !== "pendente") {
         return Response.json({ error: "Sessão não está pendente" }, { status: 400 });
@@ -121,7 +141,7 @@ export async function PATCH(
     }
 
     if (action === "cancel") {
-      if (!isTutor && !isAluno) {
+      if (!ownership.isOwner) {
         return Response.json({ error: "Não autorizado" }, { status: 403 });
       }
       if (sessao.status === "cancelada") {
@@ -136,8 +156,8 @@ export async function PATCH(
     }
 
     if (action === "update_link") {
-      if (!isTutor) {
-        return Response.json({ error: "Apenas tutores podem adicionar link" }, { status: 403 });
+      if (!ownership.isMentor) {
+        return Response.json({ error: "Apenas mentores podem adicionar link" }, { status: 403 });
       }
       if (!link_reuniao) {
         return Response.json({ error: "Link é obrigatório" }, { status: 400 });
@@ -150,8 +170,8 @@ export async function PATCH(
     }
 
     if (action === "start") {
-      if (!isTutor) {
-        return Response.json({ error: "Apenas tutores podem iniciar" }, { status: 403 });
+      if (!ownership.isMentor) {
+        return Response.json({ error: "Apenas mentores podem iniciar" }, { status: 403 });
       }
       if (sessao.status_reserva !== "aprovada") {
         return Response.json({ error: "Sessão precisa estar aprovada" }, { status: 400 });
@@ -205,14 +225,19 @@ export async function POST(
     const { action } = body as { action: string };
 
     const [userRows] = await pool.query<RowDataPacket[]>(
-      "SELECT is_aluno, is_tutor FROM Usuario WHERE usuario_id = ?",
+      "SELECT is_aluno, is_mentor FROM Usuario WHERE usuario_id = ?",
       [payload.userId]
     );
 
-    const isTutor = userRows[0]?.is_tutor === 1;
+    const isMentor = userRows[0]?.is_mentor === 1;
     const isAluno = userRows[0]?.is_aluno === 1;
 
     if (action === "join") {
+      const ownership = await verifySessionOwnership(sessaoId, payload.userId);
+      if (!ownership.isOwner) {
+        return Response.json({ error: "Não autorizado" }, { status: 403 });
+      }
+
       const [sessaoRows] = await pool.query<RowDataPacket[]>(
         "SELECT * FROM Sessao WHERE sessao_id = ?",
         [sessaoId]
@@ -231,12 +256,12 @@ export async function POST(
         );
       }
 
-      if (isTutor) {
-        if (sessao.joined_tutor_at) {
-          return Response.json({ message: "Tutor já entrou" });
+      if (isMentor) {
+        if (sessao.joined_mentor_at) {
+          return Response.json({ message: "mentor já entrou" });
         }
         await pool.query<ResultSetHeader>(
-          "UPDATE Sessao SET joined_tutor_at = NOW() WHERE sessao_id = ? AND joined_tutor_at IS NULL",
+          "UPDATE Sessao SET joined_mentor_at = NOW() WHERE sessao_id = ? AND joined_mentor_at IS NULL",
           [sessaoId]
         );
       } else if (isAluno) {

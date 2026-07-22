@@ -13,11 +13,11 @@ interface Session {
   status_reserva: string;
   plataforma_video: string | null;
   link_reuniao: string | null;
-  tutor_nome: string;
-  tutor_cargo: string;
-  tutor_empresa: string | null;
+  mentor_nome: string;
+  mentor_cargo: string;
+  mentor_empresa: string | null;
   joined_aluno_at: string | null;
-  joined_tutor_at: string | null;
+  joined_mentor_at: string | null;
 }
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
@@ -295,7 +295,7 @@ export default function AgendamentosPage() {
                   >
                     <div className="flex items-start gap-4">
                       <div className="w-11 h-11 rounded-full bg-surface-container-low flex items-center justify-center text-[13px] font-bold text-primary shrink-0">
-                        {session.tutor_nome
+                        {session.mentor_nome
                           .split(" ")
                           .map((n) => n[0])
                           .slice(0, 2)
@@ -304,7 +304,7 @@ export default function AgendamentosPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
                           <h4 className="text-[15px] font-semibold text-primary truncate">
-                            {session.tutor_nome}
+                            {session.mentor_nome}
                           </h4>
                           {reserva && (
                             <span
@@ -316,7 +316,7 @@ export default function AgendamentosPage() {
                         </div>
                         <p className="text-[13px] text-on-surface-variant">
                           {session.titulo}
-                          {session.tutor_cargo && ` · ${session.tutor_cargo}`}
+                          {session.mentor_cargo && ` · ${session.mentor_cargo}`}
                         </p>
                         <div className="flex items-center gap-3 mt-2">
                           <span className="flex items-center gap-1 text-[12px] text-on-surface-variant">

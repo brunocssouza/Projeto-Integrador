@@ -1,8 +1,10 @@
+import { NextRequest } from "next/server";
 import pool from "@/lib/db";
+import { verifyToken } from "@/lib/auth";
 import { RowDataPacket } from "mysql2";
 
 interface MentorRow extends RowDataPacket {
-  tutor_id: number;
+  mentor_id: number;
   usuario_id: number;
   nome: string;
   email: string;
@@ -15,43 +17,53 @@ interface MentorRow extends RowDataPacket {
   avatar_url: string | null;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const token = request.cookies.get("token")?.value;
+    if (!token) {
+      return Response.json({ error: "Não autenticado" }, { status: 401 });
+    }
+
+    const payload = await verifyToken(token);
+    if (!payload) {
+      return Response.json({ error: "Token inválido" }, { status: 401 });
+    }
+
     const [rows] = await pool.query<MentorRow[]>(
-      `SELECT t.tutor_id, t.usuario_id, u.nome, u.email, t.cargo, t.empresa,
+      `SELECT t.mentor_id, t.usuario_id, u.nome, u.email, t.cargo, t.empresa,
               t.descricao, t.preco_por_sessao, u.avatar_url
-       FROM Tutor t
+       FROM Mentor t
        JOIN Usuario u ON u.usuario_id = t.usuario_id
-       ORDER BY t.tutor_id`
+       ORDER BY t.mentor_id`
     );
 
     const mentors = await Promise.all(
       rows.map(async (row) => {
         const [techs] = await pool.query<RowDataPacket[]>(
-          `SELECT te.nome FROM Tutor_Tecnologia tt
+          `SELECT te.nome FROM Mentor_Tecnologia tt
            JOIN Tecnologia te ON te.tecnologia_id = tt.tecnologia_id
-           WHERE tt.tutor_id = ?`,
-          [row.tutor_id]
+           WHERE tt.mentor_id = ?`,
+          [row.mentor_id]
         );
 
         const [langs] = await pool.query<RowDataPacket[]>(
-          `SELECT i.sigla, i.nome FROM Tutor_Idioma ti
+          `SELECT i.sigla, i.nome FROM Mentor_Idioma ti
            JOIN Idioma i ON i.idioma_id = ti.idioma_id
-           WHERE ti.tutor_id = ?`,
-          [row.tutor_id]
+           WHERE ti.mentor_id = ?`,
+          [row.mentor_id]
         );
 
         const [ratingRows] = await pool.query<RowDataPacket[]>(
           `SELECT COUNT(*) AS total, COALESCE(AVG(nota), 0) AS media
-           FROM Avaliacao_Tutor WHERE tutor_id = ?`,
-          [row.tutor_id]
+           FROM Avaliacao_Mentor WHERE mentor_id = ?`,
+          [row.mentor_id]
         );
 
         const totalReviews = Number(ratingRows[0]?.total || 0);
         const avgRating = totalReviews > 0 ? Number(Number(ratingRows[0]?.media).toFixed(1)) : 0;
 
         return {
-          id: row.tutor_id,
+          id: row.mentor_id,
           name: row.nome,
           role: row.cargo,
           company: row.empresa,

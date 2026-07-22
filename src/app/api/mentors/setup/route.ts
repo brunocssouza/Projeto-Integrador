@@ -30,34 +30,34 @@ export async function POST(request: NextRequest) {
     }
 
     const [existing] = await pool.query<RowDataPacket[]>(
-      "SELECT tutor_id FROM Tutor WHERE usuario_id = ?",
+      "SELECT mentor_id FROM Mentor WHERE usuario_id = ?",
       [payload.userId]
     );
 
     if (existing.length > 0) {
       await pool.query<ResultSetHeader>(
-        `UPDATE Tutor SET cargo = ?, empresa = ?, descricao = ?,
+        `UPDATE Mentor SET cargo = ?, empresa = ?, descricao = ?,
          experiencia_profissional = ?, preco_por_sessao = ?
          WHERE usuario_id = ?`,
         [cargo, empresa || null, descricao, experiencia || null, preco, payload.userId]
       );
     } else {
       await pool.query<ResultSetHeader>(
-        `INSERT INTO Tutor (usuario_id, cargo, empresa, descricao, experiencia_profissional, preco_por_sessao)
+        `INSERT INTO Mentor (usuario_id, cargo, empresa, descricao, experiencia_profissional, preco_por_sessao)
          VALUES (?, ?, ?, ?, ?, ?)`,
         [payload.userId, cargo, empresa || null, descricao, experiencia || null, preco]
       );
     }
 
-    const [tutorRows] = await pool.query<RowDataPacket[]>(
-      "SELECT tutor_id FROM Tutor WHERE usuario_id = ?",
+    const [MentorRows] = await pool.query<RowDataPacket[]>(
+      "SELECT mentor_id FROM Mentor WHERE usuario_id = ?",
       [payload.userId]
     );
-    const tutorId = tutorRows[0].tutor_id;
+    const MentorId = MentorRows[0].mentor_id;
 
     await pool.query<ResultSetHeader>(
-      "DELETE FROM Tutor_Tecnologia WHERE tutor_id = ?",
-      [tutorId]
+      "DELETE FROM Mentor_Tecnologia WHERE mentor_id = ?",
+      [MentorId]
     );
 
     if (tecnologias && tecnologias.length > 0) {
@@ -79,8 +79,8 @@ export async function POST(request: NextRequest) {
         }
 
         await pool.query<ResultSetHeader>(
-          "INSERT IGNORE INTO Tutor_Tecnologia (tutor_id, tecnologia_id) VALUES (?, ?)",
-          [tutorId, techId]
+          "INSERT IGNORE INTO Mentor_Tecnologia (mentor_id, tecnologia_id) VALUES (?, ?)",
+          [MentorId, techId]
         );
       }
     }

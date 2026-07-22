@@ -26,27 +26,29 @@ export async function DELETE(request: NextRequest) {
         "SELECT aluno_id FROM Aluno WHERE usuario_id = ?",
         [userId]
       );
-      const [tutorRows] = await conn.query<RowDataPacket[]>(
-        "SELECT tutor_id FROM Tutor WHERE usuario_id = ?",
+      const [MentorRows] = await conn.query<RowDataPacket[]>(
+        "SELECT mentor_id FROM Mentor WHERE usuario_id = ?",
         [userId]
       );
 
       const alunoId = alunoRows.length > 0 ? alunoRows[0].aluno_id : null;
-      const tutorId = tutorRows.length > 0 ? tutorRows[0].tutor_id : null;
+      const MentorId = MentorRows.length > 0 ? MentorRows[0].mentor_id : null;
 
-      // Delete tutor dependencies
-      if (tutorId) {
-        await conn.query("DELETE FROM Avaliacao_Tutor WHERE sessao_id IN (SELECT sessao_id FROM Sessao WHERE tutor_id = ?)", [tutorId]);
-        await conn.query("DELETE FROM Sessao WHERE tutor_id = ?", [tutorId]);
-        await conn.query("DELETE FROM Disponibilidade WHERE tutor_id = ?", [tutorId]);
-        await conn.query("DELETE FROM Tutor_Tecnologia WHERE tutor_id = ?", [tutorId]);
-        await conn.query("DELETE FROM Tutor_Idioma WHERE tutor_id = ?", [tutorId]);
-        await conn.query("DELETE FROM Tutor WHERE tutor_id = ?", [tutorId]);
+      // Delete Mentor dependencies
+      if (MentorId) {
+        await conn.query("DELETE FROM Pagamento WHERE sessao_id IN (SELECT sessao_id FROM Sessao WHERE mentor_id = ?)", [MentorId]);
+        await conn.query("DELETE FROM Avaliacao_Mentor WHERE mentor_id = ?", [MentorId]);
+        await conn.query("DELETE FROM Disponibilidade WHERE mentor_id = ?", [MentorId]);
+        await conn.query("DELETE FROM Mentor_Tecnologia WHERE mentor_id = ?", [MentorId]);
+        await conn.query("DELETE FROM Mentor_Idioma WHERE mentor_id = ?", [MentorId]);
+        await conn.query("DELETE FROM Sessao WHERE mentor_id = ?", [MentorId]);
+        await conn.query("DELETE FROM Mentor WHERE mentor_id = ?", [MentorId]);
       }
 
       // Delete aluno dependencies
       if (alunoId) {
-        await conn.query("DELETE FROM Avaliacao_Tutor WHERE sessao_id IN (SELECT sessao_id FROM Sessao WHERE aluno_id = ?)", [alunoId]);
+        await conn.query("DELETE FROM Pagamento WHERE sessao_id IN (SELECT sessao_id FROM Sessao WHERE aluno_id = ?)", [alunoId]);
+        await conn.query("DELETE FROM Avaliacao_Mentor WHERE aluno_id = ?", [alunoId]);
         await conn.query("DELETE FROM Sessao WHERE aluno_id = ?", [alunoId]);
         await conn.query("DELETE FROM Aluno WHERE aluno_id = ?", [alunoId]);
       }

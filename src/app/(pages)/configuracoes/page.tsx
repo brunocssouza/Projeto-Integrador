@@ -8,7 +8,7 @@ interface Transaction {
   id: number;
   title: string;
   area: string;
-  tutorName: string;
+  mentorName: string;
   dateTime: string;
   duration: number;
   status: string;
@@ -36,6 +36,13 @@ export default function ConfiguracoesPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
+
+  // Password
+  const [senhaAtual, setSenhaAtual] = useState("");
+  const [novaSenha, setNovaSenha] = useState("");
+  const [confirmarSenha, setConfirmarSenha] = useState("");
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordMsg, setPasswordMsg] = useState("");
 
   useEffect(() => {
     async function fetchTransactions() {
@@ -133,6 +140,48 @@ export default function ConfiguracoesPage() {
       alert("Erro ao excluir conta");
     } finally {
       setDeleting(false);
+    }
+  }
+
+  async function handleChangePassword() {
+    if (!senhaAtual || !novaSenha || !confirmarSenha) {
+      setPasswordMsg("Preencha todos os campos");
+      return;
+    }
+    if (novaSenha.length < 6) {
+      setPasswordMsg("Nova senha deve ter no mínimo 6 caracteres");
+      return;
+    }
+    if (novaSenha !== confirmarSenha) {
+      setPasswordMsg("Nova senha e confirmação não coincidem");
+      return;
+    }
+
+    setSavingPassword(true);
+    setPasswordMsg("");
+
+    try {
+      const res = await fetch("/api/auth/password", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ senhaAtual, novaSenha }),
+      });
+
+      if (res.ok) {
+        setPasswordMsg("Senha alterada com sucesso!");
+        setSenhaAtual("");
+        setNovaSenha("");
+        setConfirmarSenha("");
+        setTimeout(() => setPasswordMsg(""), 3000);
+      } else {
+        const data = await res.json();
+        setPasswordMsg(data.error || "Erro ao alterar senha");
+      }
+    } catch {
+      setPasswordMsg("Erro ao alterar senha");
+    } finally {
+      setSavingPassword(false);
     }
   }
 
@@ -255,6 +304,70 @@ export default function ConfiguracoesPage() {
         </div>
       </section>
 
+      {/* Password Section */}
+      <section className="bg-white border border-outline-variant/30 rounded-2xl p-6 sm:p-8 mb-8">
+        <h2 className="text-[17px] font-semibold text-primary mb-6">Alterar Senha</h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-[13px] font-medium text-on-surface-variant mb-2">
+              Senha atual
+            </label>
+            <input
+              type="password"
+              value={senhaAtual}
+              onChange={(e) => setSenhaAtual(e.target.value)}
+              placeholder="••••••••"
+              className="w-full px-4 py-3 bg-surface-container-low border border-outline-variant/30 rounded-xl text-[14px] text-primary placeholder:text-on-surface-variant/30 focus:outline-none focus:border-primary/30 transition-colors"
+            />
+          </div>
+          <div>
+            <label className="block text-[13px] font-medium text-on-surface-variant mb-2">
+              Nova senha
+            </label>
+            <input
+              type="password"
+              value={novaSenha}
+              onChange={(e) => setNovaSenha(e.target.value)}
+              placeholder="Mínimo 6 caracteres"
+              className="w-full px-4 py-3 bg-surface-container-low border border-outline-variant/30 rounded-xl text-[14px] text-primary placeholder:text-on-surface-variant/30 focus:outline-none focus:border-primary/30 transition-colors"
+            />
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <label className="block text-[13px] font-medium text-on-surface-variant mb-2">
+            Confirmar nova senha
+          </label>
+          <input
+            type="password"
+            value={confirmarSenha}
+            onChange={(e) => setConfirmarSenha(e.target.value)}
+            placeholder="Repita a nova senha"
+            className="w-full max-w-xs px-4 py-3 bg-surface-container-low border border-outline-variant/30 rounded-xl text-[14px] text-primary placeholder:text-on-surface-variant/30 focus:outline-none focus:border-primary/30 transition-colors"
+          />
+        </div>
+
+        <div className="flex items-center gap-4 mt-6">
+          <button
+            onClick={handleChangePassword}
+            disabled={savingPassword || !senhaAtual || !novaSenha || !confirmarSenha}
+            className="px-6 py-2.5 bg-orange-500 text-white rounded-xl text-[13px] font-semibold hover:bg-orange-600 transition-colors disabled:opacity-50"
+          >
+            {savingPassword ? "Alterando..." : "Alterar senha"}
+          </button>
+          {passwordMsg && (
+            <span
+              className={`text-[13px] ${
+                passwordMsg.includes("sucesso") ? "text-green-600" : "text-red-500"
+              }`}
+            >
+              {passwordMsg}
+            </span>
+          )}
+        </div>
+      </section>
+
       {/* Transactions Section */}
       <section className="bg-white border border-outline-variant/30 rounded-2xl p-6 sm:p-8 mb-8">
         <div className="flex items-center justify-between mb-6">
@@ -304,7 +417,7 @@ export default function ConfiguracoesPage() {
                       <p className="text-[11px] text-on-surface-variant/50">{t.area}</p>
                     </td>
                     <td className="py-3 text-[13px] text-on-surface-variant">
-                      {t.tutorName}
+                      {t.mentorName}
                     </td>
                     <td className="py-3 text-[13px] text-on-surface-variant">
                       {formatDate(t.dateTime)}

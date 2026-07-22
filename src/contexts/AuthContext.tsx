@@ -12,7 +12,7 @@ export interface User {
   avatar_url?: string | null;
   languages: string[];
   is_aluno: boolean;
-  is_tutor: boolean;
+  is_mentor: boolean;
   perfil_mentor_completo: boolean;
 }
 
@@ -87,7 +87,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isLoading) return;
     if (user && isPublic) {
-      router.push("/dashboard");
+      if (user.is_mentor && !user.perfil_mentor_completo) {
+        router.push("/mentor/setup");
+      } else {
+        router.push("/dashboard");
+      }
     }
   }, [user, isLoading, isPublic, pathname, router]);
 

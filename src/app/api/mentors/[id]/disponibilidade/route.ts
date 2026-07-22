@@ -4,19 +4,28 @@ import { verifyToken } from "@/lib/auth";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 
 export async function GET(
-  _request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const token = request.cookies.get("token")?.value;
+    if (!token) {
+      return Response.json({ error: "Não autenticado" }, { status: 401 });
+    }
+
+    const payload = await verifyToken(token);
+    if (!payload) {
+      return Response.json({ error: "Token inválido" }, { status: 401 });
+    }
     const { id } = await params;
-    const tutorId = Number(id);
+    const mentorId = Number(id);
 
     const [rows] = await pool.query<RowDataPacket[]>(
       `SELECT disponibilidade_id, dia_semana, hora_inicio, hora_fim, ativo, plataformas_video
        FROM Disponibilidade
-       WHERE tutor_id = ?
+       WHERE mentor_id = ?
        ORDER BY dia_semana, hora_inicio`,
-      [tutorId]
+      [mentorId]
     );
 
     return Response.json({
@@ -56,14 +65,14 @@ export async function PUT(
     }
 
     const { id } = await params;
-    const tutorId = Number(id);
+    const mentorId = Number(id);
 
-    const [tutorRows] = await pool.query<RowDataPacket[]>(
-      "SELECT tutor_id FROM Tutor WHERE usuario_id = ?",
+    const [mentorRows] = await pool.query<RowDataPacket[]>(
+      "SELECT mentor_id FROM Mentor WHERE usuario_id = ?",
       [payload.userId]
     );
 
-    if (tutorRows.length === 0 || tutorRows[0].tutor_id !== tutorId) {
+    if (mentorRows.length === 0 || mentorRows[0].mentor_id !== mentorId) {
       return Response.json({ error: "Não autorizado" }, { status: 403 });
     }
 
@@ -73,8 +82,8 @@ export async function PUT(
     };
 
     await pool.query<ResultSetHeader>(
-      "DELETE FROM Disponibilidade WHERE tutor_id = ?",
-      [tutorId]
+      "DELETE FROM Disponibilidade WHERE mentor_id = ?",
+      [mentorId]
     );
 
     if (slots && slots.length > 0) {
@@ -83,9 +92,9 @@ export async function PUT(
           ? slot.plataformasVideo.join(",")
           : null;
         await pool.query<ResultSetHeader>(
-          `INSERT INTO Disponibilidade (tutor_id, dia_semana, hora_inicio, hora_fim, ativo, plataformas_video)
+          `INSERT INTO Disponibilidade (mentor_id, dia_semana, hora_inicio, hora_fim, ativo, plataformas_video)
            VALUES (?, ?, ?, ?, 1, ?)`,
-          [tutorId, slot.dayOfWeek, slot.startTime, slot.endTime, platforms]
+          [mentorId, slot.dayOfWeek, slot.startTime, slot.endTime, platforms]
         );
       }
     }

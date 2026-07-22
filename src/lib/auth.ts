@@ -1,9 +1,11 @@
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
 import { hash, compare } from "bcryptjs";
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "mock-mentor-jwt-secret-change-in-production-2026"
-);
+const secret = process.env.JWT_SECRET;
+if (!secret) {
+  throw new Error("JWT_SECRET environment variable is required");
+}
+const JWT_SECRET = new TextEncoder().encode(secret);
 
 const BCRYPT_ROUNDS = 12;
 

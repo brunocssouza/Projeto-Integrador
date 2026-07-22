@@ -16,7 +16,7 @@ interface MentorSession {
   aluno_nome: string;
   aluno_email: string;
   joined_aluno_at: string | null;
-  joined_tutor_at: string | null;
+  joined_mentor_at: string | null;
 }
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
@@ -248,8 +248,8 @@ export default function MentorAgendamentosPage() {
                         {session.joined_aluno_at && (
                           <span>Aluno entrou: {new Date(session.joined_aluno_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
                         )}
-                        {session.joined_tutor_at && (
-                          <span>Tutor entrou: {new Date(session.joined_tutor_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
+                        {session.joined_mentor_at && (
+                          <span>Mentor entrou: {new Date(session.joined_mentor_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span>
                         )}
                       </div>
                     )}
@@ -348,7 +348,7 @@ export default function MentorAgendamentosPage() {
                       </>
                     )}
 
-                    {/* Approved: Join (for tutor) */}
+                    {/* Approved: Join (for mentor) */}
                     {session.status_reserva === "aprovada" && session.status !== "em_andamento" && session.status !== "agendada" && (
                       <button
                         onClick={() => handleJoin(session.sessao_id)}

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import gsap from "gsap";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -14,7 +13,6 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
   const { login } = useAuth();
 
   useEffect(() => {
@@ -48,10 +46,7 @@ export default function LoginPage() {
       return;
     }
 
-    setTimeout(() => {
-      setIsLoading(false);
-      router.push("/dashboard");
-    }, 400);
+    setIsLoading(false);
   };
 
   return (

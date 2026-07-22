@@ -304,11 +304,12 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="divide-y divide-outline-variant/40">
+          <div className="divide-y divide-outline-variant/40 mt-20">
             {previewMentors.map((mentor) => (
-              <div
+              <Link
                 key={mentor.id}
-                className="mentor-row flex items-center gap-5 py-7 group cursor-pointer"
+                href={`/mentor/${mentor.id}`}
+                className="mentor-row flex items-center gap-5 py-7 group cursor-pointer no-underline"
               >
                 <div className="relative w-14 h-14 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
                   <Image
@@ -335,7 +336,7 @@ export default function LandingPage() {
                 <span className="material-symbols-outlined text-[18px] text-on-surface/20 group-hover:text-on-surface/60 transition-colors">
                   arrow_forward
                 </span>
-              </div>
+              </Link>
             ))}
           </div>
 

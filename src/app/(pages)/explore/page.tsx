@@ -280,21 +280,23 @@ export default function ExploreMentors() {
                     <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
                   </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <h3 className="text-[16px] font-semibold text-primary truncate group-hover:text-orange-500 transition-colors">
-                        {mentor.name}
-                      </h3>
-                      <span className="text-[13px] text-orange-500 font-medium">
-                        {Number(mentor.rating).toFixed(1)}
-                      </span>
-                      <span className="material-symbols-outlined text-[14px] text-orange-500" style={{ fontVariationSettings: "'FILL' 1" }}>
-                        star
-                      </span>
-                      <span className="text-[12px] text-on-surface-variant/40 ml-0.5">
-                        ({mentor.totalReviews})
-                      </span>
-                    </div>
+                    <div className="flex-1 min-w-0">
+                      <Link href={`/mentor/${mentor.id}`} className="no-underline">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <h3 className="text-[16px] font-semibold text-primary truncate group-hover:text-orange-500 transition-colors">
+                            {mentor.name}
+                          </h3>
+                          <span className="text-[13px] text-orange-500 font-medium">
+                            {Number(mentor.rating).toFixed(1)}
+                          </span>
+                          <span className="material-symbols-outlined text-[14px] text-orange-500" style={{ fontVariationSettings: "'FILL' 1" }}>
+                            star
+                          </span>
+                          <span className="text-[12px] text-on-surface-variant/40 ml-0.5">
+                            ({mentor.totalReviews})
+                          </span>
+                        </div>
+                      </Link>
                     <p className="text-[13px] text-on-surface-variant">
                       {mentor.role} {mentor.company ? `· ${mentor.company}` : ""}
                     </p>

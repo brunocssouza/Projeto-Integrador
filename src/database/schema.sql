@@ -8,10 +8,10 @@ SET CHARACTER SET utf8mb4;
 
 -- ============================================================
 -- 1. USUARIO
---    Tabela base. Um usuario pode ser Aluno, Tutor, ou ambos.
+--    Tabela base. Um usuario pode ser Aluno, Mentor, ou ambos.
 --    CPF obrigatorio (validacao brasileira).
 --    Duas senhas para os dois modos? Nao - mesma conta, mesma senha.
---    perfil_mentor_completo indica se ja preencheu dados de tutor.
+--    perfil_mentor_completo indica se ja preencheu dados de mentor.
 -- ============================================================
 CREATE TABLE Usuario (
     usuario_id              INT             AUTO_INCREMENT PRIMARY KEY,
@@ -22,7 +22,7 @@ CREATE TABLE Usuario (
     senha_hash              VARCHAR(255)    NOT NULL                COMMENT 'bcrypt hash',
     avatar_url              VARCHAR(512)    DEFAULT NULL,
     is_aluno                TINYINT(1)      NOT NULL DEFAULT 1,
-    is_tutor                TINYINT(1)      NOT NULL DEFAULT 0,
+    is_mentor                TINYINT(1)      NOT NULL DEFAULT 0,
     perfil_mentor_completo  TINYINT(1)      NOT NULL DEFAULT 0     COMMENT '0 = precisa setup de mentor',
     criado_em               TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     atualizado_em           TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -52,7 +52,7 @@ CREATE TABLE Idioma (
 -- ============================================================
 -- 3. USUARIO_IDIOMA
 --    Quais idiomas o usuario domina (N:N).
---    Util para o aluno filtrar tutores por idioma de aula.
+--    Util para o aluno filtrar mentores por idioma de aula.
 -- ============================================================
 CREATE TABLE Usuario_Idioma (
     usuario_id  INT NOT NULL,
@@ -87,13 +87,13 @@ CREATE TABLE Aluno (
 
 
 -- ============================================================
--- 5. TUTOR (MENTOR)
+-- 5. MENTOR (MENTOR)
 --    Dados especificos do modo mentor (1:1 com Usuario).
 --    rating, total_avaliacoes e preco_por_sessao para queries
 --    rapidas no explore / perfil.
 -- ============================================================
-CREATE TABLE Tutor (
-    tutor_id                    INT             AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE Mentor (
+    mentor_id                    INT             AUTO_INCREMENT PRIMARY KEY,
     usuario_id                  INT             NOT NULL,
     cargo                       VARCHAR(120)    NOT NULL                COMMENT 'ex: Backend Engineer',
     empresa                     VARCHAR(120)    DEFAULT NULL,
@@ -102,34 +102,36 @@ CREATE TABLE Tutor (
     preco_por_sessao            DECIMAL(10,2)   NOT NULL DEFAULT 0.00
                                                         COMMENT 'Valor em BRL',
     rating                      DECIMAL(2,1)    NOT NULL DEFAULT 0.0
-                                                        COMMENT 'Media 1.0 a 5.0',
+                                                         COMMENT 'Media 1.0 a 5.0',
     total_avaliacoes            INT UNSIGNED    NOT NULL DEFAULT 0,
+    video_apresentacao_url      VARCHAR(512)    DEFAULT NULL
+                                                         COMMENT 'URL do video de apresentacao (YouTube, Vimeo)',
 
-    UNIQUE KEY uq_tutor_usuario (usuario_id),
+    UNIQUE KEY uq_mentor_usuario (usuario_id),
 
-    CONSTRAINT chk_tutor_rating
+    CONSTRAINT chk_mentor_rating
         CHECK (rating BETWEEN 0.0 AND 5.0),
-    CONSTRAINT chk_tutor_preco
+    CONSTRAINT chk_mentor_preco
         CHECK (preco_por_sessao >= 0),
 
-    CONSTRAINT fk_tutor_usuario
+    CONSTRAINT fk_mentor_usuario
         FOREIGN KEY (usuario_id) REFERENCES Usuario (usuario_id)
         ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
 -- ============================================================
--- 6. TUTOR_IDIOMA
---    Idiomas em que o tutor pode dar aula (N:N).
+-- 6. MENTOR_IDIOMA
+--    Idiomas em que o mentor pode dar aula (N:N).
 -- ============================================================
-CREATE TABLE Tutor_Idioma (
-    tutor_id    INT NOT NULL,
+CREATE TABLE Mentor_Idioma (
+    mentor_id    INT NOT NULL,
     idioma_id   INT NOT NULL,
 
-    PRIMARY KEY (tutor_id, idioma_id),
+    PRIMARY KEY (mentor_id, idioma_id),
 
-    CONSTRAINT fk_ti_tutor
-        FOREIGN KEY (tutor_id) REFERENCES Tutor (tutor_id)
+    CONSTRAINT fk_ti_mentor
+        FOREIGN KEY (mentor_id) REFERENCES Mentor (mentor_id)
         ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_ti_idioma
         FOREIGN KEY (idioma_id) REFERENCES Idioma (idioma_id)
@@ -152,17 +154,17 @@ CREATE TABLE Tecnologia (
 
 
 -- ============================================================
--- 8. TUTOR_TECNOLOGIA
---    Quais tecnologias cada tutor domina (N:N).
+-- 8. MENTOR_TECNOLOGIA
+--    Quais tecnologias cada mentor domina (N:N).
 -- ============================================================
-CREATE TABLE Tutor_Tecnologia (
-    tutor_id        INT NOT NULL,
+CREATE TABLE Mentor_Tecnologia (
+    mentor_id        INT NOT NULL,
     tecnologia_id   INT NOT NULL,
 
-    PRIMARY KEY (tutor_id, tecnologia_id),
+    PRIMARY KEY (mentor_id, tecnologia_id),
 
-    CONSTRAINT fk_tt_tutor
-        FOREIGN KEY (tutor_id) REFERENCES Tutor (tutor_id)
+    CONSTRAINT fk_tt_mentor
+        FOREIGN KEY (mentor_id) REFERENCES Mentor (mentor_id)
         ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_tt_tecnologia
         FOREIGN KEY (tecnologia_id) REFERENCES Tecnologia (tecnologia_id)
@@ -172,12 +174,12 @@ CREATE TABLE Tutor_Tecnologia (
 
 -- ============================================================
 -- 9. DISPONIBILIDADE
---    Horarios em que o tutor esta disponivel para sessoes.
+--    Horarios em que o mentor esta disponivel para sessoes.
 --    Permite configurar recurrence semanal.
 -- ============================================================
 CREATE TABLE Disponibilidade (
     disponibilidade_id  INT             AUTO_INCREMENT PRIMARY KEY,
-    tutor_id            INT             NOT NULL,
+    mentor_id            INT             NOT NULL,
     dia_semana          TINYINT UNSIGNED NOT NULL
                                         COMMENT '0=Domingo .. 6=Sabado',
     hora_inicio         TIME            NOT NULL,
@@ -187,7 +189,7 @@ CREATE TABLE Disponibilidade (
                                         DEFAULT NULL
                                         COMMENT 'Plataformas de videoaceita neste horario',
 
-    INDEX idx_disp_tutor (tutor_id),
+    INDEX idx_disp_mentor (mentor_id),
     INDEX idx_disp_dia   (dia_semana),
 
     CONSTRAINT chk_dia_semana
@@ -195,20 +197,20 @@ CREATE TABLE Disponibilidade (
     CONSTRAINT chk_hora_range
         CHECK (hora_inicio < hora_fim),
 
-    CONSTRAINT fk_disp_tutor
-        FOREIGN KEY (tutor_id) REFERENCES Tutor (tutor_id)
+    CONSTRAINT fk_disp_mentor
+        FOREIGN KEY (mentor_id) REFERENCES Mentor (mentor_id)
         ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
 -- ============================================================
 -- 10. SESSAO
---     Sessao de simulado / entrevista entre aluno e tutor.
+--     Sessao de simulado / entrevista entre aluno e mentor.
 -- ============================================================
 CREATE TABLE Sessao (
     sessao_id           INT             AUTO_INCREMENT PRIMARY KEY,
     aluno_id            INT             NOT NULL,
-    tutor_id            INT             NOT NULL,
+    mentor_id            INT             NOT NULL,
     titulo              VARCHAR(200)    NOT NULL,
     area                VARCHAR(100)    NOT NULL,
     data_hora           TIMESTAMP       NOT NULL,
@@ -217,21 +219,21 @@ CREATE TABLE Sessao (
                                         NOT NULL DEFAULT 'agendada',
     status_reserva      ENUM('pendente', 'aprovada', 'recusada')
                                         NOT NULL DEFAULT 'pendente'
-                                        COMMENT 'Fluxo de aprovacao do tutor',
+                                        COMMENT 'Fluxo de aprovacao do mentor',
     plataforma_video    ENUM('google_meet', 'microsoft_teams', 'zoom', 'discord')
                                         DEFAULT NULL,
     link_reuniao        VARCHAR(512)    DEFAULT NULL,
     joined_aluno_at     TIMESTAMP       NULL DEFAULT NULL
                                         COMMENT 'Horario em que o aluno entrou na call',
-    joined_tutor_at     TIMESTAMP       NULL DEFAULT NULL
-                                        COMMENT 'Horario em que o tutor entrou na call',
+    joined_mentor_at     TIMESTAMP       NULL DEFAULT NULL
+                                        COMMENT 'Horario em que o mentor entrou na call',
     cancelado_por       INT             DEFAULT NULL
                                         COMMENT 'usuario_id de quem cancelou',
     motivo_cancelamento VARCHAR(300)    DEFAULT NULL,
     criado_em           TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     INDEX idx_sessao_aluno   (aluno_id),
-    INDEX idx_sessao_tutor   (tutor_id),
+    INDEX idx_sessao_mentor   (mentor_id),
     INDEX idx_sessao_data    (data_hora),
     INDEX idx_sessao_status  (status),
     INDEX idx_sessao_reserva (status_reserva),
@@ -239,8 +241,8 @@ CREATE TABLE Sessao (
     CONSTRAINT fk_sessao_aluno
         FOREIGN KEY (aluno_id) REFERENCES Aluno (aluno_id)
         ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT fk_sessao_tutor
-        FOREIGN KEY (tutor_id) REFERENCES Tutor (tutor_id)
+    CONSTRAINT fk_sessao_mentor
+        FOREIGN KEY (mentor_id) REFERENCES Mentor (mentor_id)
         ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -271,29 +273,29 @@ CREATE TABLE Feedback (
 
 
 -- ============================================================
--- 12. AVALIACAO_TUTOR
---     Reviews publicos de alunos sobre tutores.
+-- 12. AVALIACAO_MENTOR
+--     Reviews publicos de alunos sobre mentores.
 --     Diferente do Feedback (que e por sessao) - este e sobre
---     o tutor como um todo, e o que aparece no perfil dele.
+--     o mentor como um todo, e o que aparece no perfil dele.
 -- ============================================================
-CREATE TABLE Avaliacao_Tutor (
+CREATE TABLE Avaliacao_Mentor (
     avaliacao_id    INT             AUTO_INCREMENT PRIMARY KEY,
-    tutor_id        INT             NOT NULL,
+    mentor_id        INT             NOT NULL,
     aluno_id        INT             NOT NULL,
     nota            DECIMAL(2,1)    NOT NULL                COMMENT '1.0 - 5.0',
     titulo          VARCHAR(120)    DEFAULT NULL,
     comentario      TEXT            DEFAULT NULL,
     criado_em       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    INDEX idx_avt_tutor  (tutor_id),
+    INDEX idx_avt_mentor  (mentor_id),
     INDEX idx_avt_aluno  (aluno_id),
     INDEX idx_avt_nota   (nota),
 
     CONSTRAINT chk_avt_nota
         CHECK (nota BETWEEN 1.0 AND 5.0),
 
-    CONSTRAINT fk_avt_tutor
-        FOREIGN KEY (tutor_id) REFERENCES Tutor (tutor_id)
+    CONSTRAINT fk_avt_mentor
+        FOREIGN KEY (mentor_id) REFERENCES Mentor (mentor_id)
         ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_avt_aluno
         FOREIGN KEY (aluno_id) REFERENCES Aluno (aluno_id)

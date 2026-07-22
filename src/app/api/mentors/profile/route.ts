@@ -17,22 +17,30 @@ export async function PATCH(request: NextRequest) {
 
     const body = await request.json();
 
-    // Verify user is a tutor
-    const [tutorRows] = await pool.query<RowDataPacket[]>(
-      "SELECT tutor_id FROM Tutor WHERE usuario_id = ?",
+    // Verify user is a Mentor
+    const [MentorRows] = await pool.query<RowDataPacket[]>(
+      "SELECT mentor_id FROM Mentor WHERE usuario_id = ?",
       [payload.userId]
     );
 
-    if (tutorRows.length === 0) {
-      return Response.json({ error: "Não é tutor" }, { status: 403 });
+    if (MentorRows.length === 0) {
+      return Response.json({ error: "Não é Mentor" }, { status: 403 });
     }
 
-    const tutorId = tutorRows[0].tutor_id;
+    const MentorId = MentorRows[0].mentor_id;
 
     // Update allowed fields
     const updates: string[] = [];
     const values: (string | number | null)[] = [];
 
+    if (body.descricao !== undefined) {
+      updates.push("descricao = ?");
+      values.push(body.descricao);
+    }
+    if (body.experiencia !== undefined) {
+      updates.push("experiencia_profissional = ?");
+      values.push(body.experiencia);
+    }
     if (body.cargo !== undefined) {
       updates.push("cargo = ?");
       values.push(body.cargo);
@@ -54,9 +62,9 @@ export async function PATCH(request: NextRequest) {
       return Response.json({ error: "Nenhum dado para atualizar" }, { status: 400 });
     }
 
-    values.push(tutorId);
+    values.push(MentorId);
     await pool.query<ResultSetHeader>(
-      `UPDATE Tutor SET ${updates.join(", ")} WHERE tutor_id = ?`,
+      `UPDATE Mentor SET ${updates.join(", ")} WHERE mentor_id = ?`,
       values
     );
 

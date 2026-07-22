@@ -29,9 +29,9 @@ export async function GET(request: NextRequest) {
     const [sessions] = await pool.query<RowDataPacket[]>(
       `SELECT s.sessao_id, s.titulo, s.area, s.data_hora, s.duracao_min, s.status,
               t.preco_por_sessao AS valor,
-              u.nome AS tutor_nome
+              u.nome AS mentor_nome
        FROM Sessao s
-       JOIN Tutor t ON t.tutor_id = s.tutor_id
+       JOIN Mentor t ON t.mentor_id = s.mentor_id
        JOIN Usuario u ON u.usuario_id = t.usuario_id
        WHERE s.aluno_id = ? AND s.status IN ('concluida', 'agendada', 'em_andamento')
        ORDER BY s.data_hora DESC`,
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       id: s.sessao_id,
       title: s.titulo,
       area: s.area,
-      tutorName: s.tutor_nome,
+      MentorName: s.mentor_nome,
       dateTime: s.data_hora,
       duration: s.duracao_min,
       status: s.status,

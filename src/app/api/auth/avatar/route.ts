@@ -4,6 +4,19 @@ import { verifyToken } from "@/lib/auth";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
+const MAGIC_BYTES: Record<string, string[]> = {
+  jpeg: ["ffd8"],
+  png: ["89504e47"],
+  webp: ["52494646"],
+};
+
+function validateMagicBytes(buffer: Buffer, ext: string): boolean {
+  const magic = MAGIC_BYTES[ext];
+  if (!magic) return false;
+  const hex = buffer.toString("hex", 0, 4);
+  return magic.some((m) => hex.startsWith(m));
+}
+
 export async function POST(request: NextRequest) {
   try {
     const token = request.cookies.get("token")?.value;
@@ -34,17 +47,21 @@ export async function POST(request: NextRequest) {
     }
 
     const ext = file.type.split("/")[1];
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    if (!validateMagicBytes(buffer, ext)) {
+      return Response.json({ error: "Arquivo corrompido ou formato inválido" }, { status: 400 });
+    }
+
     const filename = `avatar_${payload.userId}_${Date.now()}.${ext}`;
     const uploadDir = path.join(process.cwd(), "public", "uploads", "avatars");
 
     await mkdir(uploadDir, { recursive: true });
-
-    const buffer = Buffer.from(await file.arrayBuffer());
     await writeFile(path.join(uploadDir, filename), buffer);
 
     const avatarUrl = `/uploads/avatars/${filename}`;
 
-    await pool.query("UPDATE Usuario SET foto_perfil = ? WHERE usuario_id = ?", [
+    await pool.query("UPDATE Usuario SET avatar_url = ? WHERE usuario_id = ?", [
       avatarUrl,
       payload.userId,
     ]);

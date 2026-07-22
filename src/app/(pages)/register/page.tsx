@@ -32,6 +32,7 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -164,7 +165,8 @@ export default function RegisterPage() {
         return;
       }
 
-      router.push("/login");
+      setSuccessMessage("Cadastro realizado com sucesso! Redirecionando para o login...");
+      setTimeout(() => router.push("/login"), 2000);
     } catch {
       setServerError("Erro de conexão. Tente novamente.");
     } finally {
@@ -173,6 +175,8 @@ export default function RegisterPage() {
   };
 
   const handleNext = async () => {
+    setErrors({});
+    setServerError("");
     const isValid = await validateStep();
     if (!isValid) return;
     if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
@@ -180,6 +184,7 @@ export default function RegisterPage() {
   };
 
   const handlePrevious = () => {
+    setErrors({});
     if (currentStep > 0) setCurrentStep(currentStep - 1);
   };
 
@@ -227,8 +232,18 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        {/* Form Steps */}
-        <div className="min-h-[200px]">
+        {successMessage ? (
+          <div className="p-6 bg-green-50 border border-green-200 rounded-2xl text-center">
+            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+              <span className="material-symbols-outlined text-green-600 text-[32px]">check_circle</span>
+            </div>
+            <h2 className="text-[20px] font-bold text-primary mb-2">Cadastro realizado!</h2>
+            <p className="text-green-700 text-[14px]">Redirecionando para o login...</p>
+          </div>
+        ) : (
+          <>
+            {/* Form Steps */}
+            <div className="min-h-[200px]">
           {currentStep === 0 && (
             <div>
               <label className="block text-[13px] font-medium text-on-surface-variant mb-1.5">
@@ -328,7 +343,7 @@ export default function RegisterPage() {
                 <div className="grid grid-cols-1 gap-2.5">
                   {[
                     { value: "aluno", label: "Aluno", desc: "Praticar entrevistas com mentores experientes" },
-                    { value: "tutor", label: "Mentor", desc: "Ajudar outros profissionais a se prepararem" },
+                    { value: "mentor", label: "Mentor", desc: "Ajudar outros profissionais a se prepararem" },
                     { value: "ambos", label: "Ambos", desc: "Ser aluno e mentor ao mesmo tempo" },
                   ].map((option) => (
                     <button
@@ -480,6 +495,8 @@ export default function RegisterPage() {
             Faça login
           </Link>
         </p>
+          </>
+        )}
       </div>
     </div>
   );

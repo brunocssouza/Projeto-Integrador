@@ -6,6 +6,8 @@ interface MentorStats {
   profile: {
     cargo: string;
     empresa: string;
+    descricao: string;
+    experiencia: string;
     precoPorSessao: number;
     videoApresentacaoUrl: string | null;
   };
@@ -24,9 +26,10 @@ export default function MentorConfiguracoesPage() {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
 
-  // Profile form
   const [cargo, setCargo] = useState("");
   const [empresa, setEmpresa] = useState("");
+  const [descricao, setDescricao] = useState("");
+  const [experiencia, setExperiencia] = useState("");
   const [preco, setPreco] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
 
@@ -38,6 +41,8 @@ export default function MentorConfiguracoesPage() {
           setData(d);
           setCargo(d.profile.cargo || "");
           setEmpresa(d.profile.empresa || "");
+          setDescricao(d.profile.descricao || "");
+          setExperiencia(d.profile.experiencia || "");
           setPreco(String(d.profile.precoPorSessao || ""));
           setVideoUrl(d.profile.videoApresentacaoUrl || "");
         }
@@ -53,8 +58,17 @@ export default function MentorConfiguracoesPage() {
     const body: Record<string, string | number | null> = {};
     if (cargo !== data?.profile.cargo) body.cargo = cargo;
     if (empresa !== data?.profile.empresa) body.empresa = empresa;
+    if (descricao !== data?.profile.descricao) body.descricao = descricao;
+    if (experiencia !== data?.profile.experiencia) body.experiencia = experiencia;
     if (Number(preco) !== data?.profile.precoPorSessao) body.precoPorSessao = Number(preco);
     if (videoUrl !== (data?.profile.videoApresentacaoUrl || "")) body.videoApresentacao = videoUrl || null;
+
+    if (Object.keys(body).length === 0) {
+      setSaveMsg("Nenhuma alteração para salvar.");
+      setTimeout(() => setSaveMsg(""), 3000);
+      setSaving(false);
+      return;
+    }
 
     try {
       const res = await fetch("/api/mentors/profile", {
@@ -74,6 +88,8 @@ export default function MentorConfiguracoesPage() {
                   ...prev.profile,
                   cargo,
                   empresa,
+                  descricao,
+                  experiencia,
                   precoPorSessao: Number(preco),
                   videoApresentacaoUrl: videoUrl || null,
                 },
@@ -143,7 +159,7 @@ export default function MentorConfiguracoesPage() {
         </div>
       </section>
 
-      {/* Profile Config */}
+      {/* Professional Data */}
       <section className="bg-white border border-outline-variant/30 rounded-2xl p-6 sm:p-8 mb-8">
         <h2 className="text-[17px] font-semibold text-primary mb-6">
           Dados Profissionais
@@ -188,6 +204,32 @@ export default function MentorConfiguracoesPage() {
               className="w-full px-4 py-3 bg-surface-container-low border border-outline-variant/30 rounded-xl text-[14px] text-primary placeholder:text-on-surface-variant/30 focus:outline-none focus:border-primary/30 transition-colors"
             />
           </div>
+        </div>
+
+        <div className="mt-6">
+          <label className="block text-[13px] font-medium text-on-surface-variant mb-2">
+            Sobre mim
+          </label>
+          <textarea
+            value={descricao}
+            onChange={(e) => setDescricao(e.target.value)}
+            placeholder="Conte um pouco sobre sua trajetória profissional e áreas de especialização..."
+            rows={4}
+            className="w-full px-4 py-3 bg-surface-container-low border border-outline-variant/30 rounded-xl text-[14px] text-primary placeholder:text-on-surface-variant/30 focus:outline-none focus:border-primary/30 transition-colors resize-y min-h-[100px]"
+          />
+        </div>
+
+        <div className="mt-6">
+          <label className="block text-[13px] font-medium text-on-surface-variant mb-2">
+            Experiência Profissional
+          </label>
+          <textarea
+            value={experiencia}
+            onChange={(e) => setExperiencia(e.target.value)}
+            placeholder="Descreva suas experiências anteriores, empresas onde trabalhou, projetos relevantes..."
+            rows={5}
+            className="w-full px-4 py-3 bg-surface-container-low border border-outline-variant/30 rounded-xl text-[14px] text-primary placeholder:text-on-surface-variant/30 focus:outline-none focus:border-primary/30 transition-colors resize-y min-h-[120px]"
+          />
         </div>
 
         <div className="flex items-center gap-4 mt-6">

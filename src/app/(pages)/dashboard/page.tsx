@@ -44,7 +44,7 @@ interface DashboardData {
   user: { name: string };
   nextSession: NextSession | null;
   stats: { totalSessoes: number; concluidas: number; horasPratica: number };
-  recentSessions: { id: number; title: string; dateTime: string; status: string; tutorName: string }[];
+  recentSessions: { id: number; title: string; dateTime: string; status: string; mentorName: string }[];
   mentors: Mentor[];
 }
 
@@ -398,7 +398,7 @@ export default function Dashboard() {
                           </span>
                         </div>
                         <p className="text-[11px] text-on-surface-variant/50">
-                          {session.tutorName} · {formatRelativeDate(session.dateTime)}
+                          {session.mentorName} · {formatRelativeDate(session.dateTime)}
                         </p>
                       </div>
                     </div>

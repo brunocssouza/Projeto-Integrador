@@ -1,23 +1,34 @@
+import { NextRequest } from "next/server";
 import pool from "@/lib/db";
+import { verifyToken } from "@/lib/auth";
 import { RowDataPacket } from "mysql2";
 
 export async function GET(
-  _request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const token = request.cookies.get("token")?.value;
+    if (!token) {
+      return Response.json({ error: "Não autenticado" }, { status: 401 });
+    }
+
+    const payload = await verifyToken(token);
+    if (!payload) {
+      return Response.json({ error: "Token inválido" }, { status: 401 });
+    }
     const { id } = await params;
-    const tutorId = Number(id);
+    const mentorId = Number(id);
 
     const [reviews] = await pool.query<RowDataPacket[]>(
       `SELECT a.avaliacao_id, a.nota, a.titulo, a.comentario, a.criado_em,
               u.nome AS aluno_nome
-       FROM Avaliacao_Tutor a
+       FROM Avaliacao_Mentor a
        JOIN Aluno al ON al.aluno_id = a.aluno_id
        JOIN Usuario u ON u.usuario_id = al.usuario_id
-       WHERE a.tutor_id = ?
+       WHERE a.mentor_id = ?
        ORDER BY a.criado_em DESC`,
-      [tutorId]
+      [mentorId]
     );
 
     return Response.json({

@@ -12,7 +12,7 @@ interface UserRow extends RowDataPacket {
   senha_hash: string;
   avatar_url: string | null;
   is_aluno: number;
-  is_tutor: number;
+  is_mentor: number;
   perfil_mentor_completo: number;
 }
 
@@ -58,13 +58,12 @@ export async function POST(request: NextRequest) {
     const response = Response.json({
       user: {
         id: user.usuario_id,
-        cpf: user.cpf,
         name: user.nome,
         email: user.email,
         phone: user.telefone,
         avatar_url: user.avatar_url,
         is_aluno: user.is_aluno === 1,
-        is_tutor: user.is_tutor === 1,
+        is_mentor: user.is_mentor === 1,
         perfil_mentor_completo: user.perfil_mentor_completo === 1,
       },
     });
