@@ -327,9 +327,9 @@ export default function RegisterPage() {
                 </label>
                 <div className="grid grid-cols-1 gap-2.5">
                   {[
-                    { value: "aluno", label: "Aluno", desc: "Praticar entrevistas com tutores experientes" },
-                    { value: "tutor", label: "Tutor", desc: "Ajudar outros profissionais a se prepararem" },
-                    { value: "ambos", label: "Ambos", desc: "Ser aluno e tutor ao mesmo tempo" },
+                    { value: "aluno", label: "Aluno", desc: "Praticar entrevistas com mentores experientes" },
+                    { value: "tutor", label: "Mentor", desc: "Ajudar outros profissionais a se prepararem" },
+                    { value: "ambos", label: "Ambos", desc: "Ser aluno e mentor ao mesmo tempo" },
                   ].map((option) => (
                     <button
                       key={option.value}

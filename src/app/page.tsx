@@ -159,7 +159,7 @@ export default function LandingPage() {
         >
           <h1 className="font-headline-lg text-[2.8rem] lg:text-[3.5rem] font-black leading-[1.1] tracking-tight mb-6">
             Domine sua próxima entrevista com profissionais de{" "}
-            <span className="text-orange-400">alto nivel</span>.
+            <span className="text-orange-400">alto nível</span>.
           </h1>
 
           <p className="text-[1.1rem] leading-relaxed text-white/70 max-w-[600px] mb-10">
@@ -205,11 +205,11 @@ export default function LandingPage() {
               </span>
               <div>
                 <h3 className="font-headline-sm text-[20px] text-primary font-bold mb-2">
-                  Simulados Realistas
+                  Simulados com mentores reais
                 </h3>
                 <p className="text-on-surface-variant text-[15px] leading-relaxed max-w-[500px]">
-                  Entrevistas técnicas e comportamentais idênticas às aplicadas
-                  pelas maiores empresas do mercado. Sem surpresas no dia.
+                  Mentores experientes de empresas e áreas da técnologia
+                  preparados para simular entrevistas reais.
                 </p>
               </div>
             </div>
@@ -220,11 +220,11 @@ export default function LandingPage() {
               </span>
               <div>
                 <h3 className="font-headline-sm text-[20px] text-primary font-bold mb-2">
-                  Feedback Detalhado
+                  Viva uma experiência de processo seletivo
                 </h3>
                 <p className="text-on-surface-variant text-[15px] leading-relaxed max-w-[500px]">
-                  Um mapa claro dos seus pontos fortes e do que precisa melhorar
-                  para garantir sua aprovação.
+                  Pratique em um ambiente seguro, no idioma e na área que
+                  desejar, como se estivesse concorrendo a uma vaga.
                 </p>
               </div>
             </div>
@@ -235,11 +235,12 @@ export default function LandingPage() {
               </span>
               <div>
                 <h3 className="font-headline-sm text-[20px] text-primary font-bold mb-2">
-                  Evolução Mensurável
+                  Evolua a cada entrevista
                 </h3>
                 <p className="text-on-surface-variant text-[15px] leading-relaxed max-w-[500px]">
-                  Acompanhe seu progresso com um dashboard que mede seu nivel
-                  de habilidade técnica ao longo do tempo.
+                  Receba feedback personalizado, acompanhe seu progresso e
+                  esteja mais preparado para conquistar sua próxima
+                  oportunidade.
                 </p>
               </div>
             </div>
@@ -263,6 +264,44 @@ export default function LandingPage() {
               <br />
               chegou lá.
             </h2>
+          </div>
+
+          <div className="space-x-5 flex">
+            <div className="feature-item flex flex-col md:flex-row gap-6 md:gap-12 items-start  mr-10">
+              <span className="text-[48px] font-black text-blue-600/20 leading-none select-none">
+                01
+              </span>
+              <div>
+                <h3 className="font-headline-sm text-[20px] text-primary font-bold mb-2">
+                  Escolha um mentor
+                </h3>
+               
+              </div>
+            </div>
+
+            <div className="feature-item flex flex-col md:flex-row gap-6 md:gap-12 items-start">
+              <span className="text-[48px] font-black text-blue-600/20 leading-none select-none">
+                02
+              </span>
+              <div>
+                <h3 className="font-headline-sm text-[20px] text-primary font-bold mb-2">
+                  Agende sua entrevista
+                </h3>
+               
+              </div>
+            </div>
+
+            <div className="feature-item flex flex-col md:flex-row gap-6 md:gap-12 items-start">
+              <span className="text-[48px] font-black text-blue-600/20 leading-none select-none">
+                03
+              </span>
+              <div>
+                <h3 className="font-headline-sm text-[20px] text-primary font-bold mb-2">
+                  Receba feedback personalizado
+                </h3>
+                
+              </div>
+            </div>
           </div>
 
           <div className="divide-y divide-outline-variant/40">
