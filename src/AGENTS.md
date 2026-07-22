@@ -24,9 +24,13 @@ npm run db:reset
 npm run dev
 
 # 6. Rodar testes
-npm run test           # uma vez
-npm run test:watch     # em modo watch
-```
+npm run test           # unitarios + integracao (verbose)
+npm run test:watch     # tudo em modo watch
+
+## Observacao
+
+Os testes de integracao fazem requisicoes HTTP reais (`fetch("localhost:3000/...")`).
+Para roda-los, o servidor Next.js precisa estar rodando (`npm run dev`).
 
 ## Parar o banco
 

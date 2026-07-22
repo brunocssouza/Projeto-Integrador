@@ -1,11 +1,32 @@
-const createJestConfig = require("next/jest").default;
+const dotenv = require("dotenv");
+dotenv.config({ path: ".env.local" });
 
-const createJestConfigFn = createJestConfig({ dir: "./" });
+const nextJest = require("next/jest").default;
+
+const createJestConfig = nextJest({ dir: "./" });
 
 /** @type {import('jest').Config} */
 const config = {
-  testEnvironment: "jsdom",
-  setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
+  projects: [
+    {
+      displayName: "unit",
+      testEnvironment: "jsdom",
+      testMatch: ["<rootDir>/tests/unit/**/*.test.{ts,tsx}"],
+      setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
+      transform: {
+        "^.+\\.(ts|tsx)$": ["ts-jest", { tsconfig: "tsconfig.json" }],
+      },
+    },
+    {
+      displayName: "integration",
+      testEnvironment: "node",
+      testMatch: ["<rootDir>/tests/integration/**/*.test.{ts,tsx}"],
+      setupFilesAfterEnv: [],
+      transform: {
+        "^.+\\.(ts|tsx)$": ["ts-jest", { tsconfig: "tsconfig.json" }],
+      },
+    },
+  ],
 };
 
-module.exports = createJestConfigFn(config);
+module.exports = createJestConfig(config);
