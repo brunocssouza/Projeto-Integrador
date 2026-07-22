@@ -22,9 +22,8 @@ export async function GET(
   try {
     const payload = await requireAuth(request);
     const { id } = await params;
-    const sessaoId = Number(id);
 
-    const session = await findByIdWithDetails(sessaoId);
+    const session = await findByIdWithDetails(id);
     if (!session) {
       return Response.json({ error: "Sessão não encontrada" }, { status: 404 });
     }
@@ -43,16 +42,15 @@ export async function PATCH(
   try {
     const payload = await requireAuth(request);
     const { id } = await params;
-    const sessaoId = Number(id);
     const body = await request.json();
     const { action, link_reuniao, motivo_cancelamento } = body;
 
-    const sessao = await findById(sessaoId);
+    const sessao = await findById(id);
     if (!sessao) {
       return Response.json({ error: "Sessão não encontrada" }, { status: 404 });
     }
 
-    const ownership = await verifyOwnership(sessaoId, payload.userId);
+    const ownership = await verifyOwnership(id, payload.userId);
     if (!ownership.isOwner) {
       return Response.json({ error: "Não autorizado" }, { status: 403 });
     }
@@ -64,7 +62,7 @@ export async function PATCH(
       if (sessao.status_reserva !== "pendente") {
         return Response.json({ error: "Sessão não está pendente" }, { status: 400 });
       }
-      await approve(sessaoId);
+      await approve(id);
       return Response.json({ message: "Sessão aprovada" });
     }
 
@@ -75,7 +73,7 @@ export async function PATCH(
       if (sessao.status_reserva !== "pendente") {
         return Response.json({ error: "Sessão não está pendente" }, { status: 400 });
       }
-      await decline(sessaoId);
+      await decline(id);
       return Response.json({ message: "Sessão recusada" });
     }
 
@@ -83,7 +81,7 @@ export async function PATCH(
       if (sessao.status === "cancelada") {
         return Response.json({ error: "Sessão já cancelada" }, { status: 400 });
       }
-      await cancel(sessaoId, payload.userId, motivo_cancelamento);
+      await cancel(id, payload.userId, motivo_cancelamento);
       return Response.json({ message: "Sessão cancelada" });
     }
 
@@ -94,7 +92,7 @@ export async function PATCH(
       if (!link_reuniao) {
         return Response.json({ error: "Link é obrigatório" }, { status: 400 });
       }
-      await updateLink(sessaoId, link_reuniao);
+      await updateLink(id, link_reuniao);
       return Response.json({ message: "Link atualizado" });
     }
 
@@ -105,7 +103,7 @@ export async function PATCH(
       if (sessao.status_reserva !== "aprovada") {
         return Response.json({ error: "Sessão precisa estar aprovada" }, { status: 400 });
       }
-      await start(sessaoId);
+      await start(id);
       return Response.json({ message: "Sessão iniciada" });
     }
 
@@ -113,7 +111,7 @@ export async function PATCH(
       if (sessao.status !== "em_andamento") {
         return Response.json({ error: "Sessão precisa estar em andamento" }, { status: 400 });
       }
-      await complete(sessaoId);
+      await complete(id);
       return Response.json({ message: "Sessão concluída" });
     }
 
@@ -131,16 +129,15 @@ export async function POST(
   try {
     const payload = await requireAuth(request);
     const { id } = await params;
-    const sessaoId = Number(id);
     const { action } = await request.json();
 
     if (action === "join") {
-      const ownership = await verifyOwnership(sessaoId, payload.userId);
+      const ownership = await verifyOwnership(id, payload.userId);
       if (!ownership.isOwner) {
         return Response.json({ error: "Não autorizado" }, { status: 403 });
       }
 
-      const sessao = await findById(sessaoId);
+      const sessao = await findById(id);
       if (!sessao) {
         return Response.json({ error: "Sessão não encontrada" }, { status: 404 });
       }
@@ -153,12 +150,12 @@ export async function POST(
         if (sessao.joined_mentor_at) {
           return Response.json({ message: "mentor já entrou" });
         }
-        await joinAsMentor(sessaoId);
+        await joinAsMentor(id);
       } else {
         if (sessao.joined_aluno_at) {
           return Response.json({ message: "Aluno já entrou" });
         }
-        await joinAsAluno(sessaoId);
+        await joinAsAluno(id);
       }
 
       return Response.json({ message: "Entrada registrada" });

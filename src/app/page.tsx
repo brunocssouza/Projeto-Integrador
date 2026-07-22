@@ -54,16 +54,31 @@ export default function LandingPage() {
       });
 
       gsap.from(featuresRef.current?.querySelectorAll(".feature-item") ?? [], {
-        y: 40,
+        y: 80,
         opacity: 0,
-        duration: 0.6,
-        stagger: 0.12,
-        ease: "power2.out",
+        duration: 0.9,
+        stagger: 0.2,
+        ease: "power3.out",
         scrollTrigger: {
           trigger: featuresRef.current,
-          start: "top 80%",
+          start: "top 85%",
         },
       });
+
+      gsap.from(
+        mentorsRef.current?.querySelectorAll(".step-item") ?? [],
+        {
+          x: -80,
+          opacity: 0,
+          duration: 1.2,
+          stagger: 0.25,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: mentorsRef.current,
+            start: "top 85%",
+          },
+        },
+      );
 
       gsap.from(
         mentorsRef.current?.querySelectorAll(".mentor-row") ?? [],
@@ -93,6 +108,10 @@ export default function LandingPage() {
     });
 
     return () => ctx.revert();
+  }, []);
+
+  useEffect(() => {
+    ScrollTrigger.refresh();
   }, []);
 
   return (
@@ -267,7 +286,7 @@ export default function LandingPage() {
           </div>
 
           <div className="space-x-5 flex">
-            <div className="feature-item flex flex-col md:flex-row gap-6 md:gap-12 items-start  mr-10">
+            <div className="step-item flex flex-col md:flex-row gap-6 md:gap-12 items-start  mr-10">
               <span className="text-[48px] font-black text-blue-600/20 leading-none select-none">
                 01
               </span>
@@ -275,11 +294,11 @@ export default function LandingPage() {
                 <h3 className="font-headline-sm text-[20px] text-primary font-bold mb-2">
                   Escolha um mentor
                 </h3>
-               
+                
               </div>
             </div>
 
-            <div className="feature-item flex flex-col md:flex-row gap-6 md:gap-12 items-start">
+            <div className="step-item flex flex-col md:flex-row gap-6 md:gap-12 items-start">
               <span className="text-[48px] font-black text-blue-600/20 leading-none select-none">
                 02
               </span>
@@ -291,7 +310,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="feature-item flex flex-col md:flex-row gap-6 md:gap-12 items-start">
+            <div className="step-item flex flex-col md:flex-row gap-6 md:gap-12 items-start">
               <span className="text-[48px] font-black text-blue-600/20 leading-none select-none">
                 03
               </span>

@@ -2,8 +2,8 @@ import pool from "@/infra/database";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
 
 export interface MentorRow {
-  mentor_id: number;
-  usuario_id: number;
+  mentor_id: string;
+  usuario_id: string;
   cargo: string;
   empresa: string | null;
   descricao: string;
@@ -14,7 +14,7 @@ export interface MentorRow {
   video_apresentacao_url: string | null;
 }
 
-export async function findByUserId(userId: number): Promise<MentorRow | null> {
+export async function findByUserId(userId: string): Promise<MentorRow | null> {
   const [rows] = await pool.query<RowDataPacket[]>(
     "SELECT * FROM Mentor WHERE usuario_id = ?",
     [userId]
@@ -22,7 +22,7 @@ export async function findByUserId(userId: number): Promise<MentorRow | null> {
   return rows.length > 0 ? (rows[0] as MentorRow) : null;
 }
 
-export async function findById(mentorId: number): Promise<MentorRow | null> {
+export async function findById(mentorId: string): Promise<MentorRow | null> {
   const [rows] = await pool.query<RowDataPacket[]>(
     "SELECT * FROM Mentor WHERE mentor_id = ?",
     [mentorId]
@@ -30,22 +30,23 @@ export async function findById(mentorId: number): Promise<MentorRow | null> {
   return rows.length > 0 ? (rows[0] as MentorRow) : null;
 }
 
-export async function create(userId: number, data: {
+export async function create(userId: string, data: {
   cargo: string;
   empresa?: string;
   descricao: string;
   experiencia?: string;
   preco: number;
-}): Promise<number> {
-  const [result] = await pool.query<ResultSetHeader>(
-    `INSERT INTO Mentor (usuario_id, cargo, empresa, descricao, experiencia_profissional, preco_por_sessao)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [userId, data.cargo, data.empresa || null, data.descricao, data.experiencia || null, data.preco]
+}): Promise<string> {
+  const mentorId = crypto.randomUUID();
+  await pool.query<ResultSetHeader>(
+    `INSERT INTO Mentor (mentor_id, usuario_id, cargo, empresa, descricao, experiencia_profissional, preco_por_sessao)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [mentorId, userId, data.cargo, data.empresa || null, data.descricao, data.experiencia || null, data.preco]
   );
-  return result.insertId;
+  return mentorId;
 }
 
-export async function update(mentorId: number, data: Record<string, string | number | null>): Promise<void> {
+export async function update(mentorId: string, data: Record<string, string | number | null>): Promise<void> {
   const allowedFields = ["cargo", "empresa", "descricao", "experiencia_profissional", "preco_por_sessao", "video_apresentacao_url"];
   const fieldMap: Record<string, string> = {
     cargo: "cargo",
@@ -73,7 +74,7 @@ export async function update(mentorId: number, data: Record<string, string | num
   await pool.query(`UPDATE Mentor SET ${updates.join(", ")} WHERE mentor_id = ?`, values);
 }
 
-export async function getStats(mentorId: number): Promise<{
+export async function getStats(mentorId: string): Promise<{
   total: number;
   concluidas: number;
   rating: number;
@@ -126,7 +127,7 @@ export async function list(): Promise<any[]> {
       const avgRating = totalReviews > 0 ? Number(Number(ratingRows[0]?.media).toFixed(1)) : 0;
 
       return {
-        id: row.mentor_id,
+        id: String(row.mentor_id),
         name: row.nome,
         role: row.cargo,
         company: row.empresa,
@@ -141,7 +142,7 @@ export async function list(): Promise<any[]> {
   );
 }
 
-export async function getProfile(mentorId: number): Promise<any> {
+export async function getProfile(mentorId: string): Promise<any> {
   const [rows] = await pool.query<RowDataPacket[]>(
     `SELECT t.*, u.nome, u.email, u.avatar_url
      FROM Mentor t
@@ -222,7 +223,7 @@ export async function getProfile(mentorId: number): Promise<any> {
   };
 }
 
-export async function getAvailability(mentorId: number): Promise<any[]> {
+export async function getAvailability(mentorId: string): Promise<any[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
     `SELECT disponibilidade_id, dia_semana, hora_inicio, hora_fim, ativo, plataformas_video
      FROM Disponibilidade
@@ -242,7 +243,7 @@ export async function getAvailability(mentorId: number): Promise<any[]> {
 }
 
 export async function updateAvailability(
-  mentorId: number,
+  mentorId: string,
   slots: { dayOfWeek: number; startTime: string; endTime: string; plataformasVideo?: string[] }[]
 ): Promise<void> {
   await pool.query("DELETE FROM Disponibilidade WHERE mentor_id = ?", [mentorId]);
@@ -261,7 +262,7 @@ export async function updateAvailability(
   }
 }
 
-export async function getStudents(mentorId: number): Promise<{ alunosAtivos: number; sessoesMes: number; mediaAvaliacao: number; students: any[] }> {
+export async function getStudents(mentorId: string): Promise<{ alunosAtivos: number; sessoesMes: number; mediaAvaliacao: number; students: any[] }> {
   const [statRows] = await pool.query<RowDataPacket[]>(
     `SELECT
        COUNT(DISTINCT s.aluno_id) AS alunos_ativos,
@@ -307,7 +308,7 @@ export async function getStudents(mentorId: number): Promise<{ alunosAtivos: num
   };
 }
 
-export async function syncTechnologies(mentorId: number, tecnologias: string[]): Promise<void> {
+export async function syncTechnologies(mentorId: string, tecnologias: string[]): Promise<void> {
   await pool.query("DELETE FROM Mentor_Tecnologia WHERE mentor_id = ?", [mentorId]);
 
   if (tecnologias && tecnologias.length > 0) {
@@ -333,14 +334,14 @@ export async function syncTechnologies(mentorId: number, tecnologias: string[]):
   }
 }
 
-export async function setProfileComplete(userId: number): Promise<void> {
+export async function setProfileComplete(userId: string): Promise<void> {
   await pool.query("UPDATE Usuario SET perfil_mentor_completo = 1 WHERE usuario_id = ?", [userId]);
 }
 
-export async function findMentorIdByUserId(userId: number): Promise<number | null> {
+export async function findMentorIdByUserId(userId: string): Promise<string | null> {
   const [rows] = await pool.query<RowDataPacket[]>(
     "SELECT mentor_id FROM Mentor WHERE usuario_id = ?",
     [userId]
   );
-  return rows.length > 0 ? rows[0].mentor_id : null;
+  return rows.length > 0 ? String(rows[0].mentor_id) : null;
 }

@@ -11,7 +11,7 @@ test("POST /api/v1/auth/login with valid credentials", async () => {
   expect(body.user).toBeDefined();
   expect(body.user.email).toBe("teste@teste.com");
   expect(body.user.name).toBe("Usuario Teste");
-  expect(body.user.id).toBeGreaterThan(0);
+  expect(typeof body.user.id).toBe("string");
 
   const setCookie = response.headers.get("Set-Cookie");
   expect(setCookie).toBeTruthy();

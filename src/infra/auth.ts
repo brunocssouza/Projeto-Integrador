@@ -11,7 +11,7 @@ const JWT_SECRET = new TextEncoder().encode(secret);
 const BCRYPT_ROUNDS = 12;
 
 export interface JwtPayload extends JWTPayload {
-  userId: number;
+  userId: string;
   email: string;
 }
 
@@ -26,7 +26,7 @@ export async function signToken(payload: JwtPayload): Promise<string> {
 export async function verifyToken(token: string): Promise<JwtPayload | null> {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
-    return { userId: payload.userId as number, email: payload.email as string };
+    return { userId: payload.userId as string, email: payload.email as string };
   } catch {
     return null;
   }

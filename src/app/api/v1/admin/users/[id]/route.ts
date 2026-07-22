@@ -11,16 +11,15 @@ export async function DELETE(
     await requireAdmin(payload.userId);
 
     const { id } = await params;
-    const targetUserId = Number(id);
 
-    if (targetUserId === payload.userId) {
+    if (id === payload.userId) {
       return Response.json(
         { error: "Você não pode excluir a si mesmo" },
         { status: 400 }
       );
     }
 
-    await deleteUser(targetUserId);
+    await deleteUser(id);
     return Response.json({ success: true });
   } catch (error: any) {
     return Response.json(

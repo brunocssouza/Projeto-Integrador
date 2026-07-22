@@ -7,7 +7,7 @@ interface ReportData {
   recentActivity: { type: string; description: string; date: string }[];
 }
 
-export async function get(alunoId: number): Promise<ReportData> {
+export async function get(alunoId: string): Promise<ReportData> {
   const [statRows] = await pool.query<RowDataPacket[]>(
     `SELECT
        COUNT(*) AS sessoes,

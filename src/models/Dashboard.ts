@@ -1,7 +1,7 @@
 import pool from "@/infra/database";
 import { RowDataPacket } from "mysql2";
 
-export async function get(alunoId: number): Promise<{
+export async function get(alunoId: string): Promise<{
   nextSession: any;
   stats: { totalSessoes: number; concluidas: number; horasPratica: number };
   recentSessions: any[];

@@ -9,9 +9,8 @@ export async function GET(
   try {
     await requireAuth(request);
     const { id } = await params;
-    const mentorId = Number(id);
 
-    const mentor = await getProfile(mentorId);
+    const mentor = await getProfile(id);
     if (!mentor) {
       return Response.json({ error: "Mentor não encontrado" }, { status: 404 });
     }

@@ -66,7 +66,7 @@ export async function seedData(pool: Pool) {
     console.log("Tecnologias seedadas.");
 
     // ============================================================
-    // Helper: create a full mentor
+    // Helper: create a full mentor (returns mentorId)
     // ============================================================
     async function createMentor(opts: {
       cpf: string;
@@ -82,40 +82,32 @@ export async function seedData(pool: Pool) {
       disponibilidade: { dia: number; inicio: string; fim: string; plataformas: string }[];
       rating?: number;
       totalAvaliacoes?: number;
-    }) {
+    }): Promise<string | null> {
       const [exists] = await pool.query(
         "SELECT usuario_id FROM Usuario WHERE email = ?",
         [opts.email]
       );
       if ((exists as any[]).length > 0) {
         console.log(`Ja existe: ${opts.email}`);
-        return;
+        return null;
       }
 
-      const [r] = await pool.query(
-        `INSERT INTO Usuario (cpf, nome, email, telefone, senha_hash, is_aluno, is_mentor, perfil_mentor_completo, is_admin)
-         VALUES (?, ?, ?, '11999990000', ?, 1, 1, 1, 0)`,
-        [opts.cpf, opts.nome, opts.email, hashed]
+      const userId = crypto.randomUUID();
+      await pool.query(
+        `INSERT INTO Usuario (usuario_id, cpf, nome, email, telefone, senha_hash, is_aluno, is_mentor, perfil_mentor_completo, is_admin)
+         VALUES (?, ?, ?, ?, ?, ?, 1, 1, 1, 0)`,
+        [userId, opts.cpf, opts.nome, opts.email, '11999990000', hashed]
       );
-      const userId = (r as any).insertId;
 
-      await pool.query("INSERT INTO Aluno (usuario_id) VALUES (?)", [userId]);
+      const alunoId = crypto.randomUUID();
+      await pool.query("INSERT INTO Aluno (aluno_id, usuario_id) VALUES (?, ?)", [alunoId, userId]);
 
-      const [mentorR] = await pool.query(
-        `INSERT INTO Mentor (usuario_id, cargo, empresa, descricao, experiencia_profissional, preco_por_sessao, rating, total_avaliacoes)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          userId,
-          opts.cargo,
-          opts.empresa,
-          opts.descricao,
-          opts.experiencia,
-          opts.preco,
-          opts.rating || 0,
-          opts.totalAvaliacoes || 0,
-        ]
+      const mentorId = crypto.randomUUID();
+      await pool.query(
+        `INSERT INTO Mentor (mentor_id, usuario_id, cargo, empresa, descricao, experiencia_profissional, preco_por_sessao, rating, total_avaliacoes)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [mentorId, userId, opts.cargo, opts.empresa, opts.descricao, opts.experiencia, opts.preco, opts.rating || 0, opts.totalAvaliacoes || 0]
       );
-      const mentorId = (mentorR as any).insertId;
 
       for (const idiomaId of opts.idiomas) {
         await pool.query(
@@ -136,20 +128,22 @@ export async function seedData(pool: Pool) {
       }
 
       for (const disp of opts.disponibilidade) {
+        const dispId = crypto.randomUUID();
         await pool.query(
-          `INSERT INTO Disponibilidade (mentor_id, dia_semana, hora_inicio, hora_fim, ativo, plataformas_video)
-           VALUES (?, ?, ?, ?, 1, ?)`,
-          [mentorId, disp.dia, disp.inicio, disp.fim, disp.plataformas]
+          `INSERT INTO Disponibilidade (disponibilidade_id, mentor_id, dia_semana, hora_inicio, hora_fim, ativo, plataformas_video)
+           VALUES (?, ?, ?, ?, ?, 1, ?)`,
+          [dispId, mentorId, disp.dia, disp.inicio, disp.fim, disp.plataformas]
         );
       }
 
-      console.log(`Mentor criado: ${opts.nome} (id=${mentorId})`);
+      console.log(`Mentor criado: ${opts.nome}`);
+      return mentorId;
     }
 
     // ============================================================
     // Seed mentor@mentor.com test user
     // ============================================================
-    await createMentor({
+    const mentorTesteId = await createMentor({
       cpf: "11122233344",
       nome: "Mentor Teste",
       email: "mentor@mentor.com",
@@ -178,17 +172,24 @@ export async function seedData(pool: Pool) {
       "SELECT usuario_id FROM Usuario WHERE email = ?",
       ["teste@teste.com"]
     );
+    let alunoTesteId: string | null = null;
     if ((existingStudent as any[]).length === 0) {
-      const [r] = await pool.query(
-        `INSERT INTO Usuario (cpf, nome, email, telefone, senha_hash, is_aluno, is_mentor, perfil_mentor_completo)
-         VALUES ('52998224725', 'Usuario Teste', 'teste@teste.com', '11999990000', ?, 1, 0, 0)`,
-        [hashed]
+      const userId = crypto.randomUUID();
+      await pool.query(
+        `INSERT INTO Usuario (usuario_id, cpf, nome, email, telefone, senha_hash, is_aluno, is_mentor, perfil_mentor_completo)
+         VALUES (?, '52998224725', 'Usuario Teste', 'teste@teste.com', '11999990000', ?, 1, 0, 0)`,
+        [userId, hashed]
       );
-      const userId = (r as any).insertId;
-      await pool.query("INSERT INTO Aluno (usuario_id) VALUES (?)", [userId]);
+      alunoTesteId = crypto.randomUUID();
+      await pool.query("INSERT INTO Aluno (aluno_id, usuario_id) VALUES (?, ?)", [alunoTesteId, userId]);
       await pool.query("INSERT IGNORE INTO Usuario_Idioma (usuario_id, idioma_id) VALUES (?, 1)", [userId]);
       console.log("Aluno teste criado.");
     } else {
+      const rows = await pool.query<RowDataPacket[]>(
+        "SELECT aluno_id FROM Aluno WHERE usuario_id = ?",
+        [(existingStudent as any[])[0].usuario_id]
+      );
+      alunoTesteId = (rows[0] as any[])[0]?.aluno_id || null;
       console.log("Aluno teste ja existe.");
     }
 
@@ -201,10 +202,11 @@ export async function seedData(pool: Pool) {
     );
 
     if ((existingAdmin as any[]).length === 0) {
-      const [r] = await pool.query(
-        `INSERT INTO Usuario (cpf, nome, email, telefone, senha_hash, is_aluno, is_mentor, is_admin, perfil_mentor_completo)
-         VALUES ('00000000000', 'Administrador', 'admin@mockmentor.com', '11999990000', ?, 1, 1, 1, 1)`,
-        [hashed]
+      const userId = crypto.randomUUID();
+      await pool.query(
+        `INSERT INTO Usuario (usuario_id, cpf, nome, email, telefone, senha_hash, is_aluno, is_mentor, is_admin, perfil_mentor_completo)
+         VALUES (?, '00000000000', 'Administrador', 'admin@mockmentor.com', '11999990000', ?, 1, 1, 1, 1)`,
+        [userId, hashed]
       );
       console.log("Admin criado.");
     } else {
@@ -214,7 +216,7 @@ export async function seedData(pool: Pool) {
     // ============================================================
     // Seed new mentors
     // ============================================================
-    await createMentor({
+    const anaBeatrizId = await createMentor({
       cpf: "12345678901",
       nome: "Ana Beatriz Silva",
       email: "ana@mentor.com",
@@ -236,7 +238,7 @@ export async function seedData(pool: Pool) {
       ],
     });
 
-    await createMentor({
+    const carlosEduardoId = await createMentor({
       cpf: "98765432100",
       nome: "Carlos Eduardo Souza",
       email: "carlos@mentor.com",
@@ -258,7 +260,7 @@ export async function seedData(pool: Pool) {
       ],
     });
 
-    await createMentor({
+    const marianaId = await createMentor({
       cpf: "45678912300",
       nome: "Mariana Lima Costa",
       email: "mariana@mentor.com",
@@ -278,7 +280,7 @@ export async function seedData(pool: Pool) {
       ],
     });
 
-    await createMentor({
+    const rafaelId = await createMentor({
       cpf: "78912345600",
       nome: "Rafael Oliveira",
       email: "rafael@mentor.com",
@@ -301,42 +303,35 @@ export async function seedData(pool: Pool) {
     // ============================================================
     // Seed real reviews (Avaliacao_Mentor)
     // ============================================================
-    const [alunoRow] = await pool.query<RowDataPacket[]>(
-      "SELECT aluno_id FROM Aluno WHERE usuario_id = (SELECT usuario_id FROM Usuario WHERE email = ?)",
-      ["teste@teste.com"]
-    );
-
-    if ((alunoRow as any[]).length > 0) {
-      const alunoId = (alunoRow as any[])[0].aluno_id;
-
-      // Check if reviews already exist
+    if (alunoTesteId) {
       const [existingReviews] = await pool.query<RowDataPacket[]>(
         "SELECT COUNT(*) AS cnt FROM Avaliacao_Mentor WHERE aluno_id = ?",
-        [alunoId]
+        [alunoTesteId]
       );
 
       if ((existingReviews as any[])[0].cnt === 0) {
-        const reviews = [
-          { mentorId: 2, nota: 4.7, titulo: "Excelente mentor", comentario: "Muito paciente e conhecimento profundo. As sessões me ajudaram muito na preparação para entrevistas." },
-          { mentorId: 2, nota: 4.8, titulo: "Melhor mentoria de Frontend", comentario: "Ana explicou conceitos de React de forma clara e prática. Recomendo demais!" },
-          { mentorId: 2, nota: 4.9, titulo: "Vale cada centavo", comentario: "Consegui uma vaga de Frontend depois das sessões com a Ana. Ajudou muito no portfólio." },
-          { mentorId: 3, nota: 4.5, titulo: "Ótimo para Java e System Design", comentario: "Carlos tem um conhecimento absurdo de arquitetura. As sessões foram muito produtivas." },
-          { mentorId: 3, nota: 4.7, titulo: "Mentoria top", comentario: "Me ajudou a entender microsservicos e boas práticas em Java. Super recomendo." },
-          { mentorId: 4, nota: 4.9, titulo: "Visão de produto incomparável", comentario: "Mariana mudou minha forma de pensar sobre produto. Aulas incríveis!" },
-          { mentorId: 4, nota: 5.0, titulo: "Incrível", comentario: "As dicas de Discovery e métricas de produto já fizeram diferença no meu trabalho." },
-          { mentorId: 5, nota: 4.2, titulo: "Bom para cloud", comentario: "Rafael tem bastante experiência com AWS. As sessões são práticas e diretas." },
+        const reviewTargets = [
+          { mentorId: anaBeatrizId!, nota: 4.7, titulo: "Excelente mentor", comentario: "Muito paciente e conhecimento profundo. As sessões me ajudaram muito na preparação para entrevistas." },
+          { mentorId: anaBeatrizId!, nota: 4.8, titulo: "Melhor mentoria de Frontend", comentario: "Ana explicou conceitos de React de forma clara e prática. Recomendo demais!" },
+          { mentorId: anaBeatrizId!, nota: 4.9, titulo: "Vale cada centavo", comentario: "Consegui uma vaga de Frontend depois das sessões com a Ana. Ajudou muito no portfólio." },
+          { mentorId: carlosEduardoId!, nota: 4.5, titulo: "Ótimo para Java e System Design", comentario: "Carlos tem um conhecimento absurdo de arquitetura. As sessões foram muito produtivas." },
+          { mentorId: carlosEduardoId!, nota: 4.7, titulo: "Mentoria top", comentario: "Me ajudou a entender microsservicos e boas práticas em Java. Super recomendo." },
+          { mentorId: marianaId!, nota: 4.9, titulo: "Visão de produto incomparável", comentario: "Mariana mudou minha forma de pensar sobre produto. Aulas incríveis!" },
+          { mentorId: marianaId!, nota: 5.0, titulo: "Incrível", comentario: "As dicas de Discovery e métricas de produto já fizeram diferença no meu trabalho." },
+          { mentorId: rafaelId!, nota: 4.2, titulo: "Bom para cloud", comentario: "Rafael tem bastante experiência com AWS. As sessões são práticas e diretas." },
         ];
 
-        for (const r of reviews) {
+        for (const r of reviewTargets) {
+          const avaliacaoId = crypto.randomUUID();
           await pool.query(
-            `INSERT INTO Avaliacao_Mentor (mentor_id, aluno_id, nota, titulo, comentario)
-             VALUES (?, ?, ?, ?, ?)`,
-            [r.mentorId, alunoId, r.nota, r.titulo, r.comentario]
+            `INSERT INTO Avaliacao_Mentor (avaliacao_id, mentor_id, aluno_id, nota, titulo, comentario)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [avaliacaoId, r.mentorId, alunoTesteId, r.nota, r.titulo, r.comentario]
           );
         }
 
-        // Update Mentor rating and total_avaliacoes from real data
-        for (const mentorId of [2, 3, 4, 5]) {
+        const mentorIds = [anaBeatrizId!, carlosEduardoId!, marianaId!, rafaelId!];
+        for (const mentorId of mentorIds) {
           await pool.query(
             `UPDATE Mentor SET
                rating = COALESCE((SELECT AVG(nota) FROM Avaliacao_Mentor WHERE mentor_id = ?), 0),

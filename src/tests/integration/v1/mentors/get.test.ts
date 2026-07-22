@@ -26,7 +26,7 @@ test("GET /api/v1/mentors returns mentor list", async () => {
   expect(body.mentors.length).toBeGreaterThan(0);
 
   const mentor = body.mentors[0];
-  expect(mentor.id).toBeGreaterThan(0);
+  expect(typeof mentor.id).toBe("string");
   expect(mentor.name).toBeTruthy();
   expect(mentor.role).toBeTruthy();
   expect(typeof mentor.price).toBe("number");

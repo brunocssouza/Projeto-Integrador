@@ -9,9 +9,8 @@ export async function GET(
   try {
     await requireAuth(request);
     const { id } = await params;
-    const mentorId = Number(id);
 
-    const reviews = await findByMentorId(mentorId);
+    const reviews = await findByMentorId(id);
     return Response.json({ reviews });
   } catch (error) {
     console.error("Avaliacoes error:", error);

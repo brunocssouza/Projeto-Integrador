@@ -1,7 +1,7 @@
 import pool from "@/infra/database";
 import { RowDataPacket } from "mysql2";
 
-export async function requireAdmin(userId: number): Promise<void> {
+export async function requireAdmin(userId: string): Promise<void> {
   const [rows] = await pool.query<RowDataPacket[]>(
     "SELECT is_admin FROM Usuario WHERE usuario_id = ?",
     [userId]
@@ -37,7 +37,7 @@ export async function listAllUsers(): Promise<any[]> {
   }));
 }
 
-export async function deleteUser(targetUserId: number): Promise<void> {
+export async function deleteUser(targetUserId: string): Promise<void> {
   const { deleteAccount } = await import("@/models/User");
   await deleteAccount(targetUserId);
 }

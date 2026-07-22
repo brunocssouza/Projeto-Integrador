@@ -1,7 +1,7 @@
 import pool from "@/infra/database";
 import { RowDataPacket } from "mysql2";
 
-export async function listByUser(userId: number, statusFilter?: string | null): Promise<{
+export async function listByUser(userId: string, statusFilter?: string | null): Promise<{
   sessions: any[];
   isAluno: boolean;
 }> {

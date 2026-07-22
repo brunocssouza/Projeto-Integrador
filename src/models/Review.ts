@@ -1,7 +1,7 @@
 import pool from "@/infra/database";
 import { RowDataPacket } from "mysql2";
 
-export async function findByMentorId(mentorId: number): Promise<any[]> {
+export async function findByMentorId(mentorId: string): Promise<any[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
     `SELECT a.avaliacao_id, a.nota, a.titulo, a.comentario, a.criado_em,
             u.nome AS aluno_nome
@@ -23,7 +23,7 @@ export async function findByMentorId(mentorId: number): Promise<any[]> {
   }));
 }
 
-export async function getStats(mentorId: number): Promise<{ total: number; media: number }> {
+export async function getStats(mentorId: string): Promise<{ total: number; media: number }> {
   const [rows] = await pool.query<RowDataPacket[]>(
     `SELECT COUNT(*) AS total, COALESCE(AVG(nota), 0) AS media
      FROM Avaliacao_Mentor WHERE mentor_id = ?`,

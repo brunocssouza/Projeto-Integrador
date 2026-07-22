@@ -9,9 +9,8 @@ export async function GET(
   try {
     await requireAuth(request);
     const { id } = await params;
-    const mentorId = Number(id);
 
-    const availability = await getAvailability(mentorId);
+    const availability = await getAvailability(id);
     return Response.json({ availability });
   } catch (error) {
     console.error("Disponibilidade GET error:", error);
@@ -26,10 +25,9 @@ export async function PUT(
   try {
     const payload = await requireAuth(request);
     const { id } = await params;
-    const mentorId = Number(id);
 
     const ownMentorId = await findMentorIdByUserId(payload.userId);
-    if (!ownMentorId || ownMentorId !== mentorId) {
+    if (!ownMentorId || ownMentorId !== id) {
       return Response.json({ error: "Não autorizado" }, { status: 403 });
     }
 
@@ -38,7 +36,7 @@ export async function PUT(
       slots: { dayOfWeek: number; startTime: string; endTime: string; plataformasVideo?: string[] }[];
     };
 
-    await updateAvailability(mentorId, slots);
+    await updateAvailability(id, slots);
     return Response.json({ message: "Disponibilidade atualizada com sucesso" });
   } catch (error) {
     console.error("Disponibilidade PUT error:", error);

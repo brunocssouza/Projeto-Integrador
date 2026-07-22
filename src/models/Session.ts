@@ -2,9 +2,9 @@ import pool from "@/infra/database";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
 
 export interface SessionRow {
-  sessao_id: number;
-  aluno_id: number;
-  mentor_id: number;
+  sessao_id: string;
+  aluno_id: string;
+  mentor_id: string;
   titulo: string;
   area: string;
   data_hora: string;
@@ -15,7 +15,7 @@ export interface SessionRow {
   link_reuniao: string | null;
   joined_mentor_at: string | null;
   joined_aluno_at: string | null;
-  cancelado_por: number | null;
+  cancelado_por: string | null;
   motivo_cancelamento: string | null;
 }
 
@@ -25,7 +25,7 @@ export interface Ownership {
   isAluno: boolean;
 }
 
-export async function findById(sessaoId: number): Promise<SessionRow | null> {
+export async function findById(sessaoId: string): Promise<SessionRow | null> {
   const [rows] = await pool.query<RowDataPacket[]>(
     "SELECT * FROM Sessao WHERE sessao_id = ?",
     [sessaoId]
@@ -33,7 +33,7 @@ export async function findById(sessaoId: number): Promise<SessionRow | null> {
   return rows.length > 0 ? (rows[0] as SessionRow) : null;
 }
 
-export async function verifyOwnership(sessaoId: number, userId: number): Promise<Ownership> {
+export async function verifyOwnership(sessaoId: string, userId: string): Promise<Ownership> {
   const [rows] = await pool.query<RowDataPacket[]>(
     `SELECT
        CASE WHEN t.usuario_id = ? THEN 1 ELSE 0 END AS is_mentor_owner,
@@ -55,66 +55,67 @@ export async function verifyOwnership(sessaoId: number, userId: number): Promise
 }
 
 export async function create(data: {
-  aluno_id: number;
-  mentor_id: number;
+  aluno_id: string;
+  mentor_id: string;
   titulo: string;
   area: string;
   data_hora: string;
   duracao_min: number;
   plataforma_video?: string;
   preco: number;
-}): Promise<number> {
-  const [result] = await pool.query<ResultSetHeader>(
-    `INSERT INTO Sessao (aluno_id, mentor_id, titulo, area, data_hora, duracao_min, status, status_reserva, plataforma_video)
-     VALUES (?, ?, ?, ?, ?, ?, 'agendada', 'pendente', ?)`,
-    [data.aluno_id, data.mentor_id, data.titulo, data.area, data.data_hora, data.duracao_min, data.plataforma_video || null]
+}): Promise<string> {
+  const sessaoId = crypto.randomUUID();
+  const pagamentoId = crypto.randomUUID();
+
+  await pool.query<ResultSetHeader>(
+    `INSERT INTO Sessao (sessao_id, aluno_id, mentor_id, titulo, area, data_hora, duracao_min, status, status_reserva, plataforma_video)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'agendada', 'pendente', ?)`,
+    [sessaoId, data.aluno_id, data.mentor_id, data.titulo, data.area, data.data_hora, data.duracao_min, data.plataforma_video || null]
   );
 
-  const sessaoId = result.insertId;
-
   await pool.query(
-    "INSERT INTO Pagamento (sessao_id, valor, forma_pagamento, status) VALUES (?, ?, 'pix', 'pendente')",
-    [sessaoId, data.preco]
+    "INSERT INTO Pagamento (pagamento_id, sessao_id, valor, forma_pagamento, status) VALUES (?, ?, ?, 'pix', 'pendente')",
+    [pagamentoId, sessaoId, data.preco]
   );
 
   return sessaoId;
 }
 
-export async function approve(sessaoId: number): Promise<void> {
+export async function approve(sessaoId: string): Promise<void> {
   await pool.query("UPDATE Sessao SET status_reserva = 'aprovada' WHERE sessao_id = ?", [sessaoId]);
 }
 
-export async function decline(sessaoId: number): Promise<void> {
+export async function decline(sessaoId: string): Promise<void> {
   await pool.query("UPDATE Sessao SET status_reserva = 'recusada' WHERE sessao_id = ?", [sessaoId]);
 }
 
-export async function cancel(sessaoId: number, userId: number, motivo?: string): Promise<void> {
+export async function cancel(sessaoId: string, userId: string, motivo?: string): Promise<void> {
   await pool.query(
     `UPDATE Sessao SET status = 'cancelada', cancelado_por = ?, motivo_cancelamento = ? WHERE sessao_id = ?`,
     [userId, motivo || null, sessaoId]
   );
 }
 
-export async function updateLink(sessaoId: number, link: string): Promise<void> {
+export async function updateLink(sessaoId: string, link: string): Promise<void> {
   await pool.query("UPDATE Sessao SET link_reuniao = ? WHERE sessao_id = ?", [link, sessaoId]);
 }
 
-export async function start(sessaoId: number): Promise<void> {
+export async function start(sessaoId: string): Promise<void> {
   await pool.query("UPDATE Sessao SET status = 'em_andamento' WHERE sessao_id = ?", [sessaoId]);
 }
 
-export async function complete(sessaoId: number): Promise<void> {
+export async function complete(sessaoId: string): Promise<void> {
   await pool.query("UPDATE Sessao SET status = 'concluida' WHERE sessao_id = ?", [sessaoId]);
 }
 
-export async function joinAsMentor(sessaoId: number): Promise<void> {
+export async function joinAsMentor(sessaoId: string): Promise<void> {
   await pool.query(
     "UPDATE Sessao SET joined_mentor_at = NOW() WHERE sessao_id = ? AND joined_mentor_at IS NULL",
     [sessaoId]
   );
 }
 
-export async function joinAsAluno(sessaoId: number): Promise<void> {
+export async function joinAsAluno(sessaoId: string): Promise<void> {
   await pool.query(
     "UPDATE Sessao SET joined_aluno_at = NOW() WHERE sessao_id = ? AND joined_aluno_at IS NULL",
     [sessaoId]
@@ -122,7 +123,7 @@ export async function joinAsAluno(sessaoId: number): Promise<void> {
 }
 
 export async function checkAvailability(
-  mentorId: number,
+  mentorId: string,
   data_hora: string,
   duracao_min: number
 ): Promise<{ available: boolean; error?: string }> {
@@ -162,7 +163,7 @@ export async function checkAvailability(
   return { available: true };
 }
 
-export async function findByIdWithDetails(sessaoId: number): Promise<any> {
+export async function findByIdWithDetails(sessaoId: string): Promise<any> {
   const [rows] = await pool.query<RowDataPacket[]>(
     `SELECT s.*,
             ua.nome AS aluno_nome, ua.email AS aluno_email,
