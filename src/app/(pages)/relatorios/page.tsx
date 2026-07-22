@@ -19,7 +19,7 @@ export default function RelatoriosPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/reports", { credentials: "include" })
+    fetch("/api/v1/reports", { credentials: "include" })
       .then(async (res) => {
         if (res.ok) {
           const d = await res.json();

@@ -99,7 +99,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/dashboard", { credentials: "include" })
+    fetch("/api/v1/dashboard", { credentials: "include" })
       .then(async (res) => {
         if (res.ok) {
           const d = await res.json();

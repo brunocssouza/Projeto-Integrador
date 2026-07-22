@@ -71,7 +71,7 @@ export default function AgendamentosPage() {
   const [selectedDay, setSelectedDay] = useState(now.getDate());
 
   useEffect(() => {
-    fetch("/api/sessions", { credentials: "include" })
+    fetch("/api/v1/sessions", { credentials: "include" })
       .then(async (res) => {
         if (res.ok) {
           const data = await res.json();

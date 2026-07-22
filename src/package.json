@@ -3,14 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "npm run services:up && next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:all": "jest",
-    "test:watch": "jest --watch",
-    "seed": "dotenv -e .env.local -- npx tsx scripts/seed.ts",
-    "reset": "dotenv -e .env.local -- npx tsx scripts/reset.ts"
+    "test": "jest --runInBand",
+    "test:watch": "jest --watchAll --runInBand",
+    "db:reset": "dotenv -e .env.local -- npx tsx scripts/db-reset.ts",
+    "services:up": "docker compose -f infra/compose.yaml up -d",
+    "services:stop": "docker compose -f infra/compose.yaml stop",
+    "services:down": "docker compose -f infra/compose.yaml down"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

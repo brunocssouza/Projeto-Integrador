@@ -66,7 +66,7 @@ export default function DisponibilidadePage() {
 
   useEffect(() => {
     if (!user?.id) return;
-    fetch(`/api/mentors/${user.id}/disponibilidade`, { credentials: "include" })
+    fetch(`/api/v1/mentors/${user.id}/disponibilidade`, { credentials: "include" })
       .then(async (res) => {
         if (!res.ok) return;
         const data = await res.json();
@@ -174,7 +174,7 @@ export default function DisponibilidadePage() {
         }
       });
 
-      await fetch(`/api/mentors/${user.id}/disponibilidade`, {
+      await fetch(`/api/v1/mentors/${user.id}/disponibilidade`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

@@ -80,7 +80,7 @@ export default function MentorProfilePage({ params }: { params: Promise<{ id: st
   const [bookingError, setBookingError] = useState("");
 
   useEffect(() => {
-    fetch(`/api/mentors/${id}`, { credentials: "include" })
+    fetch(`/api/v1/mentors/${id}`, { credentials: "include" })
       .then(async (res) => {
         if (!res.ok) {
           setNotFound(true);
@@ -183,7 +183,7 @@ export default function MentorProfilePage({ params }: { params: Promise<{ id: st
     const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}T${selectedSlot.startTime}:00`;
 
     try {
-      const res = await fetch("/api/sessions", {
+      const res = await fetch("/api/v1/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

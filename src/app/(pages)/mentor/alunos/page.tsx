@@ -23,7 +23,7 @@ export default function MentorAlunosPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/mentors/students", { credentials: "include" })
+    fetch("/api/v1/mentors/students", { credentials: "include" })
       .then(async (res) => {
         if (res.ok) {
           const d = await res.json();

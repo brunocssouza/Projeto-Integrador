@@ -47,7 +47,7 @@ export default function ConfiguracoesPage() {
   useEffect(() => {
     async function fetchTransactions() {
       try {
-        const res = await fetch("/api/transactions", { credentials: "include" });
+        const res = await fetch("/api/v1/transactions", { credentials: "include" });
         if (res.ok) {
           const data = await res.json();
           setTransactions(data.transactions || []);
@@ -70,7 +70,7 @@ export default function ConfiguracoesPage() {
     formData.append("avatar", file);
 
     try {
-      const res = await fetch("/api/auth/avatar", {
+      const res = await fetch("/api/v1/auth/avatar", {
         method: "POST",
         credentials: "include",
         body: formData,
@@ -98,7 +98,7 @@ export default function ConfiguracoesPage() {
     setSaveMsg("");
 
     try {
-      const res = await fetch("/api/auth/profile", {
+      const res = await fetch("/api/v1/auth/profile", {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -124,7 +124,7 @@ export default function ConfiguracoesPage() {
 
     setDeleting(true);
     try {
-      const res = await fetch("/api/auth/account", {
+      const res = await fetch("/api/v1/auth/account", {
         method: "DELETE",
         credentials: "include",
       });
@@ -161,7 +161,7 @@ export default function ConfiguracoesPage() {
     setPasswordMsg("");
 
     try {
-      const res = await fetch("/api/auth/password", {
+      const res = await fetch("/api/v1/auth/password", {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

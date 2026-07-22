@@ -48,7 +48,7 @@ export default function ExploreMentors() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/mentors", { credentials: "include" })
+    fetch("/api/v1/mentors", { credentials: "include" })
       .then(async (res) => {
         if (!res.ok) return;
         const data = await res.json();

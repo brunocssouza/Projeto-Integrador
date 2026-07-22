@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    fetch("/api/auth/me", { credentials: "include" })
+    fetch("/api/v1/auth/me", { credentials: "include" })
       .then(async (res) => {
         if (res.ok) {
           const data = await res.json();
@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (email: string, password: string): Promise<string | null> => {
-    const res = await fetch("/api/auth/login", {
+    const res = await fetch("/api/v1/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await fetch("/api/auth/logout", {
+    await fetch("/api/v1/auth/logout", {
       method: "POST",
       credentials: "include",
     });

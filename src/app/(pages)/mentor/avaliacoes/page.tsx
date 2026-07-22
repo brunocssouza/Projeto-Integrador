@@ -40,7 +40,7 @@ export default function MentorAvaliacoesPage() {
 
   useEffect(() => {
     if (!user?.id) return;
-    fetch(`/api/mentors/${user.id}/avaliacoes`, { credentials: "include" })
+    fetch(`/api/v1/mentors/${user.id}/avaliacoes`, { credentials: "include" })
       .then(async (res) => {
         if (!res.ok) return;
         const data = await res.json();

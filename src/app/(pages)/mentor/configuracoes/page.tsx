@@ -34,7 +34,7 @@ export default function MentorConfiguracoesPage() {
   const [videoUrl, setVideoUrl] = useState("");
 
   useEffect(() => {
-    fetch("/api/mentors/stats", { credentials: "include" })
+    fetch("/api/v1/mentors/stats", { credentials: "include" })
       .then(async (res) => {
         if (res.ok) {
           const d = await res.json();
@@ -71,7 +71,7 @@ export default function MentorConfiguracoesPage() {
     }
 
     try {
-      const res = await fetch("/api/mentors/profile", {
+      const res = await fetch("/api/v1/mentors/profile", {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

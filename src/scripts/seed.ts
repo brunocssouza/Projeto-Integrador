@@ -1,15 +1,17 @@
-import mysql, { type RowDataPacket } from "mysql2/promise";
+import mysql, { type RowDataPacket, Pool } from "mysql2/promise";
 import { hash } from "bcryptjs";
 
-async function seed() {
-  const pool = mysql.createPool({
+async function getPool() {
+  return mysql.createPool({
     host: process.env.DATABASE_HOST || "localhost",
     port: Number(process.env.DATABASE_PORT) || 3306,
     user: process.env.DATABASE_USER || "root",
     password: process.env.DATABASE_PASSWORD || "root",
     database: process.env.DATABASE_NAME || "mock_mentor",
   });
+}
 
+export async function seedData(pool: Pool) {
   const hashed = await hash("123456", 12);
 
   try {
@@ -91,8 +93,8 @@ async function seed() {
       }
 
       const [r] = await pool.query(
-        `INSERT INTO Usuario (cpf, nome, email, telefone, senha_hash, is_aluno, is_mentor, perfil_mentor_completo)
-         VALUES (?, ?, ?, '11999990000', ?, 1, 1, 1)`,
+        `INSERT INTO Usuario (cpf, nome, email, telefone, senha_hash, is_aluno, is_mentor, perfil_mentor_completo, is_admin)
+         VALUES (?, ?, ?, '11999990000', ?, 1, 1, 1, 0)`,
         [opts.cpf, opts.nome, opts.email, hashed]
       );
       const userId = (r as any).insertId;
@@ -188,6 +190,25 @@ async function seed() {
       console.log("Aluno teste criado.");
     } else {
       console.log("Aluno teste ja existe.");
+    }
+
+    // ============================================================
+    // Seed admin user
+    // ============================================================
+    const [existingAdmin] = await pool.query(
+      "SELECT usuario_id FROM Usuario WHERE email = ?",
+      ["admin@mockmentor.com"]
+    );
+
+    if ((existingAdmin as any[]).length === 0) {
+      const [r] = await pool.query(
+        `INSERT INTO Usuario (cpf, nome, email, telefone, senha_hash, is_aluno, is_mentor, is_admin, perfil_mentor_completo)
+         VALUES ('00000000000', 'Administrador', 'admin@mockmentor.com', '11999990000', ?, 1, 1, 1, 1)`,
+        [hashed]
+      );
+      console.log("Admin criado.");
+    } else {
+      console.log("Admin ja existe.");
     }
 
     // ============================================================
@@ -336,6 +357,7 @@ async function seed() {
     console.log("Credenciais de teste:");
     console.log("Aluno:   teste@teste.com / 123456");
     console.log("Mentor:  mentor@mentor.com / 123456");
+    console.log("Admin:   admin@mockmentor.com / 123456");
     console.log("Ana:     ana@mentor.com / 123456");
     console.log("Carlos:  carlos@mentor.com / 123456");
     console.log("Mariana: mariana@mentor.com / 123456");
@@ -344,6 +366,13 @@ async function seed() {
   } catch (err: any) {
     console.error("Erro:", err.message);
     console.error(err.stack);
+  }
+}
+
+async function seed() {
+  const pool = await getPool();
+  try {
+    await seedData(pool);
   } finally {
     await pool.end();
   }

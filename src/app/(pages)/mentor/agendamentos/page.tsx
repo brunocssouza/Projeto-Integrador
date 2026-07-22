@@ -50,7 +50,7 @@ export default function MentorAgendamentosPage() {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
 
   const loadSessions = () => {
-    fetch("/api/sessions", { credentials: "include" })
+    fetch("/api/v1/sessions", { credentials: "include" })
       .then(async (res) => {
         if (res.ok) {
           const data = await res.json();
@@ -77,7 +77,7 @@ export default function MentorAgendamentosPage() {
   const handleAction = async (sessaoId: number, action: string, extra?: Record<string, string>) => {
     setActionLoading(sessaoId);
     try {
-      await fetch(`/api/sessions/${sessaoId}`, {
+      await fetch(`/api/v1/sessions/${sessaoId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -93,7 +93,7 @@ export default function MentorAgendamentosPage() {
   const handleJoin = async (sessaoId: number) => {
     setActionLoading(sessaoId);
     try {
-      await fetch(`/api/sessions/${sessaoId}`, {
+      await fetch(`/api/v1/sessions/${sessaoId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

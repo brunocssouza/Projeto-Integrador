@@ -101,7 +101,7 @@ export default function MentorSetupPage() {
     setIsLoading(true);
     setServerError("");
     try {
-      const res = await fetch("/api/mentors/setup", {
+      const res = await fetch("/api/v1/mentors/setup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
