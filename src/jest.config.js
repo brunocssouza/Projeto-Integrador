@@ -13,6 +13,9 @@ const config = {
       testEnvironment: "jsdom",
       testMatch: ["<rootDir>/tests/unit/**/*.test.{ts,tsx}"],
       setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
+      moduleNameMapper: {
+        "^@/(.*)$": "<rootDir>/$1",
+      },
       transform: {
         "^.+\\.(ts|tsx)$": ["ts-jest", { tsconfig: "tsconfig.json" }],
       },
@@ -22,6 +25,9 @@ const config = {
       testEnvironment: "node",
       testMatch: ["<rootDir>/tests/integration/**/*.test.{ts,tsx}"],
       setupFilesAfterEnv: [],
+      moduleNameMapper: {
+        "^@/(.*)$": "<rootDir>/$1",
+      },
       transform: {
         "^.+\\.(ts|tsx)$": ["ts-jest", { tsconfig: "tsconfig.json" }],
       },

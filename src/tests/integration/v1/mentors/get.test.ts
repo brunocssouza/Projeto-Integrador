@@ -2,7 +2,7 @@ async function getAuthToken(): Promise<string> {
   const response = await fetch("http://localhost:3000/api/v1/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: "teste@teste.com", password: "123456" }),
+    body: JSON.stringify({ email: "aluno@aluno.com", password: "123456" }),
   });
 
   const setCookie = response.headers.get("Set-Cookie");
@@ -26,7 +26,7 @@ test("GET /api/v1/mentors returns mentor list", async () => {
   expect(body.mentors.length).toBeGreaterThan(0);
 
   const mentor = body.mentors[0];
-  expect(typeof mentor.id).toBe("string");
+  expect(typeof mentor.id).toBe("number");
   expect(mentor.name).toBeTruthy();
   expect(mentor.role).toBeTruthy();
   expect(typeof mentor.price).toBe("number");

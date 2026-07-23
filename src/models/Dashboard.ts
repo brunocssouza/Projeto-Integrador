@@ -1,30 +1,30 @@
 import pool from "@/infra/database";
 import { RowDataPacket } from "mysql2";
 
-export async function get(alunoId: string): Promise<{
+export async function get(studentId: number): Promise<{
   nextSession: any;
   stats: { totalSessoes: number; concluidas: number; horasPratica: number };
   recentSessions: any[];
   mentors: any[];
 }> {
   const [nextSessao] = await pool.query<RowDataPacket[]>(
-    `SELECT s.sessao_id, s.titulo, s.area, s.data_hora, s.duracao_min,
-            s.plataforma_video, u.nome AS mentor_nome, t.cargo AS mentor_role
-     FROM Sessao s
-     JOIN Mentor t ON t.mentor_id = s.mentor_id
-     JOIN Usuario u ON u.usuario_id = t.usuario_id
-     WHERE s.aluno_id = ? AND s.data_hora > NOW() AND s.status NOT IN ('cancelada')
-     ORDER BY s.data_hora ASC LIMIT 1`,
-    [alunoId]
+    `SELECT s.id, s.title, s.area, s.scheduled_at, s.duration_min,
+            s.video_platform, u.name AS mentor_name, t.title AS mentor_role
+     FROM session s
+     JOIN mentor t ON t.id = s.mentor_id
+     JOIN \`user\` u ON u.id = t.user_id
+     WHERE s.student_id = ? AND s.scheduled_at > NOW() AND s.status NOT IN ('cancelled')
+     ORDER BY s.scheduled_at ASC LIMIT 1`,
+    [studentId]
   );
 
   const [statRows] = await pool.query<RowDataPacket[]>(
     `SELECT
        COUNT(*) AS total,
-       SUM(CASE WHEN status = 'concluida' THEN 1 ELSE 0 END) AS concluidas,
-       COALESCE(SUM(CASE WHEN status = 'concluida' THEN duracao_min ELSE 0 END), 0) AS total_minutos
-     FROM Sessao WHERE aluno_id = ?`,
-    [alunoId]
+       SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS concluidas,
+       COALESCE(SUM(CASE WHEN status = 'completed' THEN duration_min ELSE 0 END), 0) AS total_minutos
+     FROM session WHERE student_id = ?`,
+    [studentId]
   );
 
   const [recentRows] = await pool.query<RowDataPacket[]>(
@@ -34,7 +34,7 @@ export async function get(alunoId: string): Promise<{
      JOIN Usuario u ON u.usuario_id = t.usuario_id
      WHERE s.aluno_id = ? AND s.status IN ('concluida', 'em_andamento', 'agendada')
      ORDER BY s.data_hora DESC LIMIT 5`,
-    [alunoId]
+    [studentId]
   );
 
   const [mentorList] = await pool.query<RowDataPacket[]>(
@@ -69,18 +69,19 @@ export async function get(alunoId: string): Promise<{
   const totalMin = Number(stats.total_minutos || 0);
 
   return {
-    nextSession: nextSessao.length > 0
-      ? {
-          id: nextSessao[0].sessao_id,
-          title: nextSessao[0].titulo,
-          area: nextSessao[0].area,
-          dateTime: nextSessao[0].data_hora,
-          duration: nextSessao[0].duracao_min,
-          platform: nextSessao[0].plataforma_video,
-          mentorName: nextSessao[0].mentor_nome,
-          mentorRole: nextSessao[0].mentor_role,
-        }
-      : null,
+    nextSession:
+      nextSessao.length > 0
+        ? {
+            id: nextSessao[0].sessao_id,
+            title: nextSessao[0].titulo,
+            area: nextSessao[0].area,
+            dateTime: nextSessao[0].data_hora,
+            duration: nextSessao[0].duracao_min,
+            platform: nextSessao[0].plataforma_video,
+            mentorName: nextSessao[0].mentor_nome,
+            mentorRole: nextSessao[0].mentor_role,
+          }
+        : null,
     stats: {
       totalSessoes: Number(stats.total || 0),
       concluidas: Number(stats.concluidas || 0),

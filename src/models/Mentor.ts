@@ -2,59 +2,73 @@ import pool from "@/infra/database";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
 
 export interface MentorRow {
-  mentor_id: string;
-  usuario_id: string;
-  cargo: string;
-  empresa: string | null;
-  descricao: string;
-  experiencia_profissional: string | null;
-  preco_por_sessao: number;
+  id: number;
+  user_id: number;
+  title: string;
+  company: string | null;
+  description: string;
+  professional_experience: string | null;
+  price_per_session: number;
   rating: number;
-  total_avaliacoes: number;
-  video_apresentacao_url: string | null;
+  total_reviews: number;
+  presentation_video_url: string | null;
 }
 
-export async function findByUserId(userId: string): Promise<MentorRow | null> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    "SELECT * FROM Mentor WHERE usuario_id = ?",
-    [userId]
-  );
+export async function findByUserId(userId: number): Promise<MentorRow | null> {
+  const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM mentor WHERE user_id = ?", [
+    userId,
+  ]);
   return rows.length > 0 ? (rows[0] as MentorRow) : null;
 }
 
-export async function findById(mentorId: string): Promise<MentorRow | null> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    "SELECT * FROM Mentor WHERE mentor_id = ?",
-    [mentorId]
-  );
+export async function findById(mentorId: number): Promise<MentorRow | null> {
+  const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM mentor WHERE id = ?", [mentorId]);
   return rows.length > 0 ? (rows[0] as MentorRow) : null;
 }
 
-export async function create(userId: string, data: {
-  cargo: string;
-  empresa?: string;
-  descricao: string;
-  experiencia?: string;
-  preco: number;
-}): Promise<string> {
-  const mentorId = crypto.randomUUID();
-  await pool.query<ResultSetHeader>(
-    `INSERT INTO Mentor (mentor_id, usuario_id, cargo, empresa, descricao, experiencia_profissional, preco_por_sessao)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [mentorId, userId, data.cargo, data.empresa || null, data.descricao, data.experiencia || null, data.preco]
+export async function create(
+  userId: number,
+  data: {
+    title: string;
+    company?: string;
+    description: string;
+    professionalExperience?: string;
+    pricePerSession: number;
+  }
+): Promise<number> {
+  const [result] = await pool.query<ResultSetHeader>(
+    `INSERT INTO mentor (user_id, title, company, description, professional_experience, price_per_session) VALUES (?, ?, ?, ?, ?, ?)`,
+    [
+      userId,
+      data.title,
+      data.company || null,
+      data.description,
+      data.professionalExperience || null,
+      data.pricePerSession,
+    ]
   );
-  return mentorId;
+  return result.insertId;
 }
 
-export async function update(mentorId: string, data: Record<string, string | number | null>): Promise<void> {
-  const allowedFields = ["cargo", "empresa", "descricao", "experiencia_profissional", "preco_por_sessao", "video_apresentacao_url"];
+export async function update(
+  mentorId: number,
+  data: Record<string, string | number | null>
+): Promise<void> {
+  const allowedFields = [
+    "title",
+    "company",
+    "description",
+    "professional_experience",
+    "price_per_session",
+    "presentation_video_url",
+  ];
   const fieldMap: Record<string, string> = {
-    cargo: "cargo",
-    empresa: "empresa",
-    descricao: "descricao",
-    experiencia: "experiencia_profissional",
-    precoPorSessao: "preco_por_sessao",
-    videoApresentacao: "video_apresentacao_url",
+    title: "title",
+    company: "company",
+    description: "description",
+    professionalExperience: "professional_experience",
+    pricePerSession: "price_per_session",
+    presentationVideoUrl: "presentation_video_url",
   };
 
   const updates: string[] = [];
@@ -74,7 +88,7 @@ export async function update(mentorId: string, data: Record<string, string | num
   await pool.query(`UPDATE Mentor SET ${updates.join(", ")} WHERE mentor_id = ?`, values);
 }
 
-export async function getStats(mentorId: string): Promise<{
+export async function getStats(mentorId: number): Promise<{
   total: number;
   concluidas: number;
   rating: number;
@@ -83,10 +97,10 @@ export async function getStats(mentorId: string): Promise<{
   const [statRows] = await pool.query<RowDataPacket[]>(
     `SELECT
        COUNT(*) AS total,
-       SUM(CASE WHEN status = 'concluida' THEN 1 ELSE 0 END) AS concluidas,
-       COALESCE((SELECT AVG(nota) FROM Avaliacao_Mentor WHERE mentor_id = ?), 0) AS rating,
-       (SELECT COUNT(*) FROM Avaliacao_Mentor WHERE mentor_id = ?) AS reviewCount
-     FROM Sessao WHERE mentor_id = ?`,
+       SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS concluidas,
+       COALESCE((SELECT AVG(rating) FROM mentor_review WHERE mentor_id = ?), 0) AS rating,
+       (SELECT COUNT(*) FROM mentor_review WHERE mentor_id = ?) AS reviewCount
+     FROM session WHERE mentor_id = ?`,
     [mentorId, mentorId, mentorId]
   );
 
@@ -101,40 +115,42 @@ export async function getStats(mentorId: string): Promise<{
 
 export async function list(): Promise<any[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT t.mentor_id, t.usuario_id, u.nome, u.email, t.cargo, t.empresa,
-            t.descricao, t.preco_por_sessao, u.avatar_url
-     FROM Mentor t
-     JOIN Usuario u ON u.usuario_id = t.usuario_id
-     ORDER BY t.mentor_id`
+    `SELECT t.id, t.user_id, u.name, u.email, t.title, t.company,
+            t.description, t.price_per_session, u.avatar_url
+     FROM mentor t
+     JOIN \`user\` u ON u.id = t.user_id
+     ORDER BY t.id`
   );
 
   return Promise.all(
     rows.map(async (row: RowDataPacket) => {
       const [techs] = await pool.query<RowDataPacket[]>(
-        `SELECT te.nome FROM Mentor_Tecnologia tt
-         JOIN Tecnologia te ON te.tecnologia_id = tt.tecnologia_id
+        `SELECT te.name FROM mentor_technology tt
+         JOIN technology te ON te.id = tt.technology_id
          WHERE tt.mentor_id = ?`,
-        [row.mentor_id]
+        [row.id]
       );
 
       const [ratingRows] = await pool.query<RowDataPacket[]>(
-        `SELECT COUNT(*) AS total, COALESCE(AVG(nota), 0) AS media
-         FROM Avaliacao_Mentor WHERE mentor_id = ?`,
-        [row.mentor_id]
+        `SELECT COUNT(*) AS total, COALESCE(AVG(rating), 0) AS media
+         FROM mentor_review WHERE mentor_id = ?`,
+        [row.id]
       );
 
       const totalReviews = Number(ratingRows[0]?.total || 0);
       const avgRating = totalReviews > 0 ? Number(Number(ratingRows[0]?.media).toFixed(1)) : 0;
 
       return {
-        id: String(row.mentor_id),
-        name: row.nome,
-        role: row.cargo,
-        company: row.empresa,
+        id: Number(row.id),
+        user_id: Number(row.user_id),
+        name: row.name,
+        email: row.email,
+        role: row.title,
+        company: row.company,
         rating: avgRating,
-        price: Number(row.preco_por_sessao),
-        tags: techs.map((t: RowDataPacket) => t.nome),
-        description: row.descricao,
+        price: Number(row.price_per_session),
+        tags: techs.map((t: RowDataPacket) => t.name),
+        description: row.description,
         avatar_url: row.avatar_url,
         totalReviews,
       };
@@ -142,12 +158,12 @@ export async function list(): Promise<any[]> {
   );
 }
 
-export async function getProfile(mentorId: string): Promise<any> {
+export async function getProfile(mentorId: number): Promise<any> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT t.*, u.nome, u.email, u.avatar_url
-     FROM Mentor t
-     JOIN Usuario u ON u.usuario_id = t.usuario_id
-     WHERE t.mentor_id = ?`,
+    `SELECT t.*, u.name, u.email, u.avatar_url
+     FROM mentor t
+     JOIN \`user\` u ON u.id = t.user_id
+     WHERE t.id = ?`,
     [mentorId]
   );
 
@@ -156,144 +172,156 @@ export async function getProfile(mentorId: string): Promise<any> {
   const row = rows[0];
 
   const [techs] = await pool.query<RowDataPacket[]>(
-    `SELECT te.nome FROM Mentor_Tecnologia tt
-     JOIN Tecnologia te ON te.tecnologia_id = tt.tecnologia_id
+    `SELECT te.name FROM mentor_technology tt
+     JOIN technology te ON te.id = tt.technology_id
      WHERE tt.mentor_id = ?`,
     [mentorId]
   );
 
   const [langs] = await pool.query<RowDataPacket[]>(
-    `SELECT i.sigla, i.nome FROM Mentor_Idioma ti
-     JOIN Idioma i ON i.idioma_id = ti.idioma_id
-     WHERE ti.mentor_id = ?`,
+    `SELECT i.code, i.name FROM mentor_language tl
+     JOIN language i ON i.id = tl.language_id
+     WHERE tl.mentor_id = ?`,
     [mentorId]
   );
 
   const [reviews] = await pool.query<RowDataPacket[]>(
-    `SELECT a.avaliacao_id, a.nota, a.titulo, a.comentario, a.criado_em,
-            u.nome AS aluno_nome
-     FROM Avaliacao_Mentor a
-     JOIN Aluno al ON al.aluno_id = a.aluno_id
-     JOIN Usuario u ON u.usuario_id = al.usuario_id
+    `SELECT a.id, a.rating, a.title, a.comment, a.created_at,
+            u.name AS student_name
+     FROM mentor_review a
+     JOIN student al ON al.id = a.student_id
+     JOIN \`user\` u ON u.id = al.user_id
      WHERE a.mentor_id = ?
-     ORDER BY a.criado_em DESC`,
+     ORDER BY a.created_at DESC`,
     [mentorId]
   );
 
   const [availability] = await pool.query<RowDataPacket[]>(
-    `SELECT disponibilidade_id, dia_semana, hora_inicio, hora_fim, ativo, plataformas_video
-     FROM Disponibilidade
+    `SELECT id, day_of_week, start_time, end_time, active, video_platforms
+     FROM availability
      WHERE mentor_id = ?
-     ORDER BY dia_semana, hora_inicio`,
+     ORDER BY day_of_week, start_time`,
     [mentorId]
   );
 
   return {
-    id: row.mentor_id,
-    name: row.nome,
+    id: row.id,
+    name: row.name,
     email: row.email,
-    role: row.cargo,
-    company: row.empresa,
-    description: row.descricao,
-    experience: row.experiencia_profissional,
-    price: Number(row.preco_por_sessao),
-    rating: reviews.length > 0
-      ? Number((reviews.reduce((sum: number, r: RowDataPacket) => sum + Number(r.nota), 0) / reviews.length).toFixed(1))
-      : 0,
+    role: row.title,
+    company: row.company,
+    description: row.description,
+    experience: row.professional_experience,
+    price: Number(row.price_per_session),
+    rating:
+      reviews.length > 0
+        ? Number(
+            (
+              reviews.reduce((sum: number, r: RowDataPacket) => sum + Number(r.rating), 0) /
+              reviews.length
+            ).toFixed(1)
+          )
+        : 0,
     totalReviews: reviews.length,
     avatar_url: row.avatar_url,
-    technologies: techs.map((t: RowDataPacket) => t.nome),
-    languages: langs.map((l: RowDataPacket) => ({ sigla: l.sigla, name: l.nome })),
+    technologies: techs.map((t: RowDataPacket) => t.name),
+    languages: langs.map((l: RowDataPacket) => ({ code: l.code, name: l.name })),
     reviews: reviews.map((r: RowDataPacket) => ({
-      id: r.avaliacao_id,
-      rating: Number(r.nota),
-      title: r.titulo,
-      comment: r.comentario,
-      date: r.criado_em,
-      studentName: r.aluno_nome,
+      id: r.id,
+      rating: Number(r.rating),
+      title: r.title,
+      comment: r.comment,
+      date: r.created_at,
+      studentName: r.student_name,
     })),
     availability: availability.map((a: RowDataPacket) => ({
-      id: a.disponibilidade_id,
-      dayOfWeek: a.dia_semana,
-      startTime: a.hora_inicio,
-      endTime: a.hora_fim,
-      active: a.ativo === 1,
-      plataformasVideo: a.plataformas_video ? a.plataformas_video.split(",") : [],
+      id: a.id,
+      dayOfWeek: a.day_of_week,
+      startTime: a.start_time,
+      endTime: a.end_time,
+      active: a.active === 1,
+      plataformasVideo: a.video_platforms ? a.video_platforms.split(",") : [],
     })),
   };
 }
 
-export async function getAvailability(mentorId: string): Promise<any[]> {
+export async function getAvailability(mentorId: number): Promise<any[]> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT disponibilidade_id, dia_semana, hora_inicio, hora_fim, ativo, plataformas_video
-     FROM Disponibilidade
+    `SELECT id, day_of_week, start_time, end_time, active, video_platforms
+     FROM availability
      WHERE mentor_id = ?
-     ORDER BY dia_semana, hora_inicio`,
+     ORDER BY day_of_week, start_time`,
     [mentorId]
   );
 
   return rows.map((r: RowDataPacket) => ({
-    id: r.disponibilidade_id,
-    dayOfWeek: r.dia_semana,
-    startTime: r.hora_inicio,
-    endTime: r.hora_fim,
-    active: r.ativo === 1,
-    plataformasVideo: r.plataformas_video ? r.plataformas_video.split(",") : [],
+    id: r.id,
+    dayOfWeek: r.day_of_week,
+    startTime: r.start_time,
+    endTime: r.end_time,
+    active: r.active === 1,
+    plataformasVideo: r.video_platforms ? r.video_platforms.split(",") : [],
   }));
 }
 
 export async function updateAvailability(
-  mentorId: string,
+  mentorId: number,
   slots: { dayOfWeek: number; startTime: string; endTime: string; plataformasVideo?: string[] }[]
 ): Promise<void> {
-  await pool.query("DELETE FROM Disponibilidade WHERE mentor_id = ?", [mentorId]);
+  await pool.query("DELETE FROM availability WHERE mentor_id = ?", [mentorId]);
 
   if (slots && slots.length > 0) {
     for (const slot of slots) {
-      const platforms = slot.plataformasVideo && slot.plataformasVideo.length > 0
-        ? slot.plataformasVideo.join(",")
-        : null;
+      const platforms =
+        slot.plataformasVideo && slot.plataformasVideo.length > 0
+          ? slot.plataformasVideo.join(",")
+          : null;
       await pool.query(
-        `INSERT INTO Disponibilidade (mentor_id, dia_semana, hora_inicio, hora_fim, ativo, plataformas_video)
-         VALUES (?, ?, ?, ?, 1, ?)`,
+        `INSERT INTO availability (mentor_id, day_of_week, start_time, end_time, active, video_platforms) VALUES (?, ?, ?, ?, 1, ?)`,
         [mentorId, slot.dayOfWeek, slot.startTime, slot.endTime, platforms]
       );
     }
   }
 }
 
-export async function getStudents(mentorId: string): Promise<{ alunosAtivos: number; sessoesMes: number; mediaAvaliacao: number; students: any[] }> {
+export async function getStudents(
+  mentorId: number
+): Promise<{ alunosAtivos: number; sessoesMes: number; mediaAvaliacao: number; students: any[] }> {
   const [statRows] = await pool.query<RowDataPacket[]>(
     `SELECT
-       COUNT(DISTINCT s.aluno_id) AS alunos_ativos,
-       SUM(CASE WHEN s.status = 'concluida' THEN 1 ELSE 0 END) AS sessoes_mes,
-       COALESCE((SELECT AVG(nota) FROM Avaliacao_Mentor WHERE mentor_id = ?), 0) AS media
-     FROM Sessao s
-     WHERE s.mentor_id = ? AND s.status IN ('concluida', 'em_andamento')`,
+       COUNT(DISTINCT s.student_id) AS alunos_ativos,
+       SUM(CASE WHEN s.status = 'completed' THEN 1 ELSE 0 END) AS sessoes_mes,
+       COALESCE((SELECT AVG(rating) FROM mentor_review WHERE mentor_id = ?), 0) AS media
+     FROM session s
+     WHERE s.mentor_id = ? AND s.status IN ('completed', 'in_progress')`,
     [mentorId, mentorId]
   );
 
   const [alunos] = await pool.query<RowDataPacket[]>(
-    `SELECT al.aluno_id, u.nome,
-            COUNT(s.sessao_id) AS total_sessoes,
-            MAX(s.data_hora) AS ultima_sessao,
+    `SELECT al.id, u.name,
+            COUNT(s.id) AS total_sessoes,
+            MAX(s.scheduled_at) AS ultima_sessao,
             GROUP_CONCAT(DISTINCT s.area SEPARATOR ', ') AS areas
-     FROM Aluno al
-     JOIN Usuario u ON u.usuario_id = al.usuario_id
-     JOIN Sessao s ON s.aluno_id = al.aluno_id
-     WHERE s.mentor_id = ? AND s.status = 'concluida'
-     GROUP BY al.aluno_id, u.nome
+     FROM student al
+     JOIN \`user\` u ON u.id = al.user_id
+     JOIN session s ON s.student_id = al.id
+     WHERE s.mentor_id = ? AND s.status = 'completed'
+     GROUP BY al.id, u.name
      ORDER BY ultima_sessao DESC`,
     [mentorId]
   );
 
   const s = statRows[0] || {};
   const students = alunos.map((a: RowDataPacket) => {
-    const name = a.nome as string;
+    const name = a.name as string;
     return {
-      id: a.aluno_id,
+      id: a.id,
       name,
-      initials: name.split(" ").map((n: string) => n[0]).slice(0, 2).join(""),
+      initials: name
+        .split(" ")
+        .map((n: string) => n[0])
+        .slice(0, 2)
+        .join(""),
       specialty: a.areas || "Geral",
       sessions: Number(a.total_sessoes),
       lastSession: a.ultima_sessao,
@@ -308,40 +336,42 @@ export async function getStudents(mentorId: string): Promise<{ alunosAtivos: num
   };
 }
 
-export async function syncTechnologies(mentorId: string, tecnologias: string[]): Promise<void> {
-  await pool.query("DELETE FROM Mentor_Tecnologia WHERE mentor_id = ?", [mentorId]);
+export async function syncTechnologies(mentorId: number, tecnologias: string[]): Promise<void> {
+  await pool.query("DELETE FROM mentor_technology WHERE mentor_id = ?", [mentorId]);
 
   if (tecnologias && tecnologias.length > 0) {
     for (const techName of tecnologias) {
       const [techRows] = await pool.query<RowDataPacket[]>(
-        "SELECT tecnologia_id FROM Tecnologia WHERE nome = ?",
+        "SELECT id FROM technology WHERE name = ?",
         [techName]
       );
 
       let techId: number;
       if (techRows.length === 0) {
         const [newTech] = await pool.query<ResultSetHeader>(
-          "INSERT INTO Tecnologia (nome) VALUES (?)",
+          "INSERT INTO technology (name) VALUES (?)",
           [techName]
         );
         techId = newTech.insertId;
       } else {
-        techId = techRows[0].tecnologia_id;
+        techId = techRows[0].id;
       }
 
-      await pool.query("INSERT IGNORE INTO Mentor_Tecnologia (mentor_id, tecnologia_id) VALUES (?, ?)", [mentorId, techId]);
+      await pool.query(
+        "INSERT IGNORE INTO mentor_technology (mentor_id, technology_id) VALUES (?, ?)",
+        [mentorId, techId]
+      );
     }
   }
 }
 
-export async function setProfileComplete(userId: string): Promise<void> {
-  await pool.query("UPDATE Usuario SET perfil_mentor_completo = 1 WHERE usuario_id = ?", [userId]);
+export async function setProfileComplete(userId: number): Promise<void> {
+  await pool.query(`UPDATE \`user\` SET is_mentor_profile_complete = 1 WHERE id = ?`, [userId]);
 }
 
-export async function findMentorIdByUserId(userId: string): Promise<string | null> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    "SELECT mentor_id FROM Mentor WHERE usuario_id = ?",
-    [userId]
-  );
-  return rows.length > 0 ? String(rows[0].mentor_id) : null;
+export async function findMentorIdByUserId(userId: number): Promise<number | null> {
+  const [rows] = await pool.query<RowDataPacket[]>("SELECT id FROM mentor WHERE user_id = ?", [
+    userId,
+  ]);
+  return rows.length > 0 ? rows[0].id : null;
 }

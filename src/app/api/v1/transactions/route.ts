@@ -1,18 +1,18 @@
 import { NextRequest } from "next/server";
 import { requireAuth } from "@/infra/auth";
-import { findAlunoByUserId } from "@/models/User";
-import { getByAlunoId } from "@/models/Transaction";
+import { findStudentByUserId } from "@/models/User";
+import { getByStudentId } from "@/models/Transaction";
 
 export async function GET(request: NextRequest) {
   try {
     const payload = await requireAuth(request);
-    const alunoId = await findAlunoByUserId(payload.userId);
+    const studentId = await findStudentByUserId(payload.userId);
 
-    if (!alunoId) {
+    if (!studentId) {
       return Response.json({ transactions: [], total: 0 });
     }
 
-    const data = await getByAlunoId(alunoId);
+    const data = await getByStudentId(studentId);
     return Response.json({ transactions: data.transactions, total: data.total });
   } catch (error) {
     console.error("Transactions error:", error);

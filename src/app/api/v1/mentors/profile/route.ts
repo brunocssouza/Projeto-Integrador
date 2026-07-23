@@ -25,7 +25,7 @@ export async function PATCH(request: NextRequest) {
       return Response.json({ error: "Nenhum dado para atualizar" }, { status: 400 });
     }
 
-    await update(mentor.mentor_id, data);
+    await update(mentor.id, data);
     return Response.json({ success: true });
   } catch (error) {
     console.error("Update mentor profile error:", error);

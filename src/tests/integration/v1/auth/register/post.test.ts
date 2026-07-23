@@ -1,5 +1,6 @@
 function randomCpf(): string {
-  return String(Date.now()).slice(0, 11).padEnd(11, "0");
+  const d = String(Date.now()).slice(0, 11).padEnd(11, "0");
+  return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9, 11)}`;
 }
 
 test("POST /api/v1/auth/register with valid data", async () => {
@@ -12,10 +13,11 @@ test("POST /api/v1/auth/register with valid data", async () => {
       email: uniqueEmail,
       cpf: randomCpf(),
       name: "Integration Test",
-      phone: "11999990000",
-      password: "123456",
-      role: "aluno",
-      languages: ["PT", "EN"],
+      phone: "(11) 99999-0000",
+      password: "12345678",
+      confirmPassword: "12345678",
+      isStudent: true,
+      isMentor: false,
     }),
   });
 
@@ -32,7 +34,7 @@ test("POST /api/v1/auth/register with missing fields", async () => {
     body: JSON.stringify({ email: "test@test.com" }),
   });
 
-  expect(response.status).toBe(400);
+  expect(response.status).toBe(422);
 
   const body = await response.json();
   expect(body.error).toBeTruthy();
@@ -43,13 +45,14 @@ test("POST /api/v1/auth/register with duplicate email", async () => {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      email: "teste@teste.com",
+      email: "aluno@aluno.com",
       cpf: randomCpf(),
       name: "Duplicate",
-      phone: "11999990000",
-      password: "123456",
-      role: "aluno",
-      languages: ["PT"],
+      phone: "(11) 99999-0000",
+      password: "12345678",
+      confirmPassword: "12345678",
+      isStudent: true,
+      isMentor: false,
     }),
   });
 

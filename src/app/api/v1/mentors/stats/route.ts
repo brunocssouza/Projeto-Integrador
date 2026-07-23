@@ -11,16 +11,16 @@ export async function GET(request: NextRequest) {
       return Response.json({ error: "Não é Mentor" }, { status: 403 });
     }
 
-    const stats = await getStats(mentor.mentor_id);
+    const stats = await getStats(mentor.id);
 
     return Response.json({
       profile: {
-        cargo: mentor.cargo,
-        empresa: mentor.empresa,
-        descricao: mentor.descricao,
-        experiencia: mentor.experiencia_profissional,
-        precoPorSessao: Number(mentor.preco_por_sessao),
-        videoApresentacaoUrl: mentor.video_apresentacao_url,
+        cargo: mentor.title,
+        empresa: mentor.company,
+        descricao: mentor.description,
+        experiencia: mentor.professional_experience,
+        pricePerSession: Number(mentor.price_per_session),
+        videoApresentacaoUrl: mentor.presentation_video_url,
       },
       stats,
       canRecordVideo: stats.concluidas >= 20,

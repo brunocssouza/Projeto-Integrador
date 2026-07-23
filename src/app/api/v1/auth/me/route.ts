@@ -14,22 +14,22 @@ export async function GET(request: NextRequest) {
     }
 
     const [langs] = await pool.query<RowDataPacket[]>(
-      `SELECT i.sigla FROM Usuario_Idioma ui
-       JOIN Idioma i ON i.idioma_id = ui.idioma_id
-       WHERE ui.usuario_id = ?`,
-      [user.usuario_id]
+      `SELECT i.code FROM user_language ui
+       JOIN language i ON i.id = ui.language_id
+       WHERE ui.user_id = ?`,
+      [user.id]
     );
 
     return Response.json({
       user: {
-        id: user.usuario_id,
-        name: user.nome,
+        id: user.id,
+        name: user.name,
         email: user.email,
-        phone: user.telefone,
+        phone: user.phone,
         avatar_url: user.avatar_url,
-        is_aluno: user.is_aluno === 1,
+        is_aluno: user.is_student === 1,
         is_mentor: user.is_mentor === 1,
-        perfil_mentor_completo: user.perfil_mentor_completo === 1,
+        perfil_mentor_completo: user.is_mentor_profile_complete === 1,
         languages: langs.map((l: RowDataPacket) => l.sigla),
       },
     });

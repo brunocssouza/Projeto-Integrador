@@ -1,5 +1,7 @@
-import mysql, { type RowDataPacket, Pool } from "mysql2/promise";
+import mysql, { Pool } from "mysql2/promise";
 import { hash } from "bcryptjs";
+
+let pool: Pool;
 
 async function getPool() {
   return mysql.createPool({
@@ -11,366 +13,170 @@ async function getPool() {
   });
 }
 
-export async function seedData(pool: Pool) {
-  const hashed = await hash("123456", 12);
-
-  try {
-    // ============================================================
-    // Seed catalog tables
-    // ============================================================
-    const idiomas = [
-      ["Portugues", "PT"],
-      ["Ingles", "EN"],
-      ["Espanhol", "ES"],
-      ["Frances", "FR"],
-      ["Alemao", "DE"],
-    ];
-
-    for (const [nome, sigla] of idiomas) {
-      await pool.query(
-        "INSERT IGNORE INTO Idioma (nome, sigla) VALUES (?, ?)",
-        [nome, sigla]
-      );
-    }
-    console.log("Idiomas seedados.");
-
-    const tecnologias: [string, string][] = [
-      ["React", "tech"],
-      ["Java", "tech"],
-      ["Python", "tech"],
-      ["TypeScript", "tech"],
-      ["Next.js", "tech"],
-      ["Node.js", "tech"],
-      ["AWS", "tech"],
-      ["Docker", "tech"],
-      ["Kubernetes", "tech"],
-      ["Laravel", "tech"],
-      ["MySQL", "tech"],
-      ["PostgreSQL", "tech"],
-      ["Power Automate", "ferramenta"],
-      ["Scrum", "ferramenta"],
-      ["Kanban", "ferramenta"],
-      ["React Native", "tech"],
-      ["Go", "tech"],
-      ["C#", "tech"],
-      ["Azure", "tech"],
-      ["Terraform", "ferramenta"],
-    ];
-
-    for (const [nome, categoria] of tecnologias) {
-      await pool.query(
-        "INSERT IGNORE INTO Tecnologia (nome, categoria) VALUES (?, ?)",
-        [nome, categoria]
-      );
-    }
-    console.log("Tecnologias seedadas.");
-
-    // ============================================================
-    // Helper: create a full mentor (returns mentorId)
-    // ============================================================
-    async function createMentor(opts: {
-      cpf: string;
-      nome: string;
-      email: string;
-      cargo: string;
-      empresa: string | null;
-      descricao: string;
-      experiencia: string | null;
-      preco: number;
-      idiomas: number[];
-      tecnologias: number[];
-      disponibilidade: { dia: number; inicio: string; fim: string; plataformas: string }[];
-      rating?: number;
-      totalAvaliacoes?: number;
-    }): Promise<string | null> {
-      const [exists] = await pool.query(
-        "SELECT usuario_id FROM Usuario WHERE email = ?",
-        [opts.email]
-      );
-      if ((exists as any[]).length > 0) {
-        console.log(`Ja existe: ${opts.email}`);
-        return null;
-      }
-
-      const userId = crypto.randomUUID();
-      await pool.query(
-        `INSERT INTO Usuario (usuario_id, cpf, nome, email, telefone, senha_hash, is_aluno, is_mentor, perfil_mentor_completo, is_admin)
-         VALUES (?, ?, ?, ?, ?, ?, 1, 1, 1, 0)`,
-        [userId, opts.cpf, opts.nome, opts.email, '11999990000', hashed]
-      );
-
-      const alunoId = crypto.randomUUID();
-      await pool.query("INSERT INTO Aluno (aluno_id, usuario_id) VALUES (?, ?)", [alunoId, userId]);
-
-      const mentorId = crypto.randomUUID();
-      await pool.query(
-        `INSERT INTO Mentor (mentor_id, usuario_id, cargo, empresa, descricao, experiencia_profissional, preco_por_sessao, rating, total_avaliacoes)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [mentorId, userId, opts.cargo, opts.empresa, opts.descricao, opts.experiencia, opts.preco, opts.rating || 0, opts.totalAvaliacoes || 0]
-      );
-
-      for (const idiomaId of opts.idiomas) {
-        await pool.query(
-          "INSERT IGNORE INTO Usuario_Idioma (usuario_id, idioma_id) VALUES (?, ?)",
-          [userId, idiomaId]
-        );
-        await pool.query(
-          "INSERT IGNORE INTO Mentor_Idioma (mentor_id, idioma_id) VALUES (?, ?)",
-          [mentorId, idiomaId]
-        );
-      }
-
-      for (const techId of opts.tecnologias) {
-        await pool.query(
-          "INSERT IGNORE INTO Mentor_Tecnologia (mentor_id, tecnologia_id) VALUES (?, ?)",
-          [mentorId, techId]
-        );
-      }
-
-      for (const disp of opts.disponibilidade) {
-        const dispId = crypto.randomUUID();
-        await pool.query(
-          `INSERT INTO Disponibilidade (disponibilidade_id, mentor_id, dia_semana, hora_inicio, hora_fim, ativo, plataformas_video)
-           VALUES (?, ?, ?, ?, ?, 1, ?)`,
-          [dispId, mentorId, disp.dia, disp.inicio, disp.fim, disp.plataformas]
-        );
-      }
-
-      console.log(`Mentor criado: ${opts.nome}`);
-      return mentorId;
-    }
-
-    // ============================================================
-    // Seed mentor@mentor.com test user
-    // ============================================================
-    const mentorTesteId = await createMentor({
-      cpf: "11122233344",
-      nome: "Mentor Teste",
-      email: "mentor@mentor.com",
-      cargo: "Desenvolvedor Full Stack",
-      empresa: "TechCorp",
-      descricao: "Desenvolvedor senior com 10 anos de experiencia em desenvolvimento web e mobile. Especialista em React, Node.js e arquitetura de microsservicos.",
-      experiencia: "10+ anos de experiencia em empresas de tecnologia como TechCorp e StartupXYZ. Lider de equipe em projetos de grande escala.",
-      preco: 150.0,
-      rating: 4.7,
-      totalAvaliacoes: 23,
-      idiomas: [1, 2], // PT, EN
-      tecnologias: [1, 2, 4], // React, Java, TypeScript
-      disponibilidade: [
-        { dia: 1, inicio: "09:00:00", fim: "12:00:00", plataformas: "google_meet,microsoft_teams" },
-        { dia: 1, inicio: "14:00:00", fim: "18:00:00", plataformas: "google_meet,zoom" },
-        { dia: 3, inicio: "09:00:00", fim: "12:00:00", plataformas: "google_meet" },
-        { dia: 3, inicio: "14:00:00", fim: "17:00:00", plataformas: "google_meet,microsoft_teams,zoom" },
-        { dia: 5, inicio: "10:00:00", fim: "14:00:00", plataformas: "zoom,discord" },
-      ],
-    });
-
-    // ============================================================
-    // Seed student test
-    // ============================================================
-    const [existingStudent] = await pool.query(
-      "SELECT usuario_id FROM Usuario WHERE email = ?",
-      ["teste@teste.com"]
-    );
-    let alunoTesteId: string | null = null;
-    if ((existingStudent as any[]).length === 0) {
-      const userId = crypto.randomUUID();
-      await pool.query(
-        `INSERT INTO Usuario (usuario_id, cpf, nome, email, telefone, senha_hash, is_aluno, is_mentor, perfil_mentor_completo)
-         VALUES (?, '52998224725', 'Usuario Teste', 'teste@teste.com', '11999990000', ?, 1, 0, 0)`,
-        [userId, hashed]
-      );
-      alunoTesteId = crypto.randomUUID();
-      await pool.query("INSERT INTO Aluno (aluno_id, usuario_id) VALUES (?, ?)", [alunoTesteId, userId]);
-      await pool.query("INSERT IGNORE INTO Usuario_Idioma (usuario_id, idioma_id) VALUES (?, 1)", [userId]);
-      console.log("Aluno teste criado.");
-    } else {
-      const rows = await pool.query<RowDataPacket[]>(
-        "SELECT aluno_id FROM Aluno WHERE usuario_id = ?",
-        [(existingStudent as any[])[0].usuario_id]
-      );
-      alunoTesteId = (rows[0] as any[])[0]?.aluno_id || null;
-      console.log("Aluno teste ja existe.");
-    }
-
-    // ============================================================
-    // Seed admin user
-    // ============================================================
-    const [existingAdmin] = await pool.query(
-      "SELECT usuario_id FROM Usuario WHERE email = ?",
-      ["admin@mockmentor.com"]
-    );
-
-    if ((existingAdmin as any[]).length === 0) {
-      const userId = crypto.randomUUID();
-      await pool.query(
-        `INSERT INTO Usuario (usuario_id, cpf, nome, email, telefone, senha_hash, is_aluno, is_mentor, is_admin, perfil_mentor_completo)
-         VALUES (?, '00000000000', 'Administrador', 'admin@mockmentor.com', '11999990000', ?, 1, 1, 1, 1)`,
-        [userId, hashed]
-      );
-      console.log("Admin criado.");
-    } else {
-      console.log("Admin ja existe.");
-    }
-
-    // ============================================================
-    // Seed new mentors
-    // ============================================================
-    const anaBeatrizId = await createMentor({
-      cpf: "12345678901",
-      nome: "Ana Beatriz Silva",
-      email: "ana@mentor.com",
-      cargo: "Frontend Engineer",
-      empresa: "Spotify",
-      descricao: "Engenheira frontend apaixonada por interfaces acessíveis e performáticas. 7 anos de experiência com React, TypeScript e design systems. Já trabalhou em produtos com milhões de usuários ativos.",
-      experiencia: "5 anos na Spotify liderando o time de Frontend. Anteriormente na VTEX e Nubank. Contribuidora ativa de projetos open-source.",
-      preco: 120.0,
-      rating: 4.8,
-      totalAvaliacoes: 31,
-      idiomas: [1, 2, 3], // PT, EN, ES
-      tecnologias: [1, 4, 5, 16], // React, TypeScript, Next.js, React Native
-      disponibilidade: [
-        { dia: 1, inicio: "10:00:00", fim: "13:00:00", plataformas: "google_meet,zoom" },
-        { dia: 1, inicio: "15:00:00", fim: "18:00:00", plataformas: "google_meet" },
-        { dia: 3, inicio: "10:00:00", fim: "12:00:00", plataformas: "google_meet,microsoft_teams" },
-        { dia: 5, inicio: "09:00:00", fim: "12:00:00", plataformas: "zoom,discord" },
-        { dia: 5, inicio: "14:00:00", fim: "17:00:00", plataformas: "google_meet,zoom" },
-      ],
-    });
-
-    const carlosEduardoId = await createMentor({
-      cpf: "98765432100",
-      nome: "Carlos Eduardo Souza",
-      email: "carlos@mentor.com",
-      cargo: "Backend Engineer",
-      empresa: "Nubank",
-      descricao: "Engenheiro backend focado em sistemas distribuídos de alta disponibilidade. Especialista em Java, Python e arquiteturas baseadas em eventos. Apaixonado por código limpo e testes automatizados.",
-      experiencia: "8 anos no Nubank construindo APIs que processam milhões de transações diárias. Experiência com Kafka, Redis e microserviços.",
-      preco: 180.0,
-      rating: 4.6,
-      totalAvaliacoes: 18,
-      idiomas: [1, 2], // PT, EN
-      tecnologias: [2, 3, 7, 10, 11], // Java, Python, AWS, Laravel, MySQL
-      disponibilidade: [
-        { dia: 2, inicio: "09:00:00", fim: "12:00:00", plataformas: "google_meet,microsoft_teams" },
-        { dia: 2, inicio: "14:00:00", fim: "17:00:00", plataformas: "zoom" },
-        { dia: 4, inicio: "09:00:00", fim: "12:00:00", plataformas: "google_meet" },
-        { dia: 4, inicio: "15:00:00", fim: "18:00:00", plataformas: "google_meet,microsoft_teams,zoom" },
-        { dia: 6, inicio: "10:00:00", fim: "13:00:00", plataformas: "discord" },
-      ],
-    });
-
-    const marianaId = await createMentor({
-      cpf: "45678912300",
-      nome: "Mariana Lima Costa",
-      email: "mariana@mentor.com",
-      cargo: "Product Manager",
-      empresa: "iFood",
-      descricao: "Product Manager com foco em produtos de marketplace e crescimento. Sólida experiência em discovery, métricas de produto e trabalho cross-functional com times de engenharia e design.",
-      experiencia: "6 anos no iFood gerenciando produtos de delivery e payments. Anteriormente na Loft e Resultados Digitais. MBA pela FGV.",
-      preco: 200.0,
-      rating: 4.9,
-      totalAvaliacoes: 42,
-      idiomas: [1, 2], // PT, EN
-      tecnologias: [13, 14, 15], // Power Automate, Scrum, Kanban
-      disponibilidade: [
-        { dia: 1, inicio: "08:00:00", fim: "11:00:00", plataformas: "google_meet,microsoft_teams" },
-        { dia: 3, inicio: "13:00:00", fim: "16:00:00", plataformas: "google_meet" },
-        { dia: 5, inicio: "08:00:00", fim: "11:00:00", plataformas: "zoom,microsoft_teams" },
-      ],
-    });
-
-    const rafaelId = await createMentor({
-      cpf: "78912345600",
-      nome: "Rafael Oliveira",
-      email: "rafael@mentor.com",
-      cargo: "Cloud Architect",
-      empresa: "Stone",
-      descricao: "Arquiteto de nuvem certificado AWS e GCP. Especialista em infraestrutura como código, DevOps e arquiteturas serverless. Focado em custo-eficiência e resiliência.",
-      experiencia: "10 anos de experiência em infraestrutura e cloud. 5 anos na Stone liderando a migração para AWS. Certificações: AWS Solutions Architect Professional, Terraform Associate.",
-      preco: 250.0,
-      rating: 4.2,
-      totalAvaliacoes: 12,
-      idiomas: [1, 2], // PT, EN
-      tecnologias: [7, 8, 9, 19, 20], // AWS, Docker, Kubernetes, Azure, Terraform
-      disponibilidade: [
-        { dia: 2, inicio: "08:00:00", fim: "11:00:00", plataformas: "google_meet" },
-        { dia: 4, inicio: "10:00:00", fim: "13:00:00", plataformas: "google_meet,zoom" },
-        { dia: 6, inicio: "09:00:00", fim: "12:00:00", plataformas: "discord,google_meet" },
-      ],
-    });
-
-    // ============================================================
-    // Seed real reviews (Avaliacao_Mentor)
-    // ============================================================
-    if (alunoTesteId) {
-      const [existingReviews] = await pool.query<RowDataPacket[]>(
-        "SELECT COUNT(*) AS cnt FROM Avaliacao_Mentor WHERE aluno_id = ?",
-        [alunoTesteId]
-      );
-
-      if ((existingReviews as any[])[0].cnt === 0) {
-        const reviewTargets = [
-          { mentorId: anaBeatrizId!, nota: 4.7, titulo: "Excelente mentor", comentario: "Muito paciente e conhecimento profundo. As sessões me ajudaram muito na preparação para entrevistas." },
-          { mentorId: anaBeatrizId!, nota: 4.8, titulo: "Melhor mentoria de Frontend", comentario: "Ana explicou conceitos de React de forma clara e prática. Recomendo demais!" },
-          { mentorId: anaBeatrizId!, nota: 4.9, titulo: "Vale cada centavo", comentario: "Consegui uma vaga de Frontend depois das sessões com a Ana. Ajudou muito no portfólio." },
-          { mentorId: carlosEduardoId!, nota: 4.5, titulo: "Ótimo para Java e System Design", comentario: "Carlos tem um conhecimento absurdo de arquitetura. As sessões foram muito produtivas." },
-          { mentorId: carlosEduardoId!, nota: 4.7, titulo: "Mentoria top", comentario: "Me ajudou a entender microsservicos e boas práticas em Java. Super recomendo." },
-          { mentorId: marianaId!, nota: 4.9, titulo: "Visão de produto incomparável", comentario: "Mariana mudou minha forma de pensar sobre produto. Aulas incríveis!" },
-          { mentorId: marianaId!, nota: 5.0, titulo: "Incrível", comentario: "As dicas de Discovery e métricas de produto já fizeram diferença no meu trabalho." },
-          { mentorId: rafaelId!, nota: 4.2, titulo: "Bom para cloud", comentario: "Rafael tem bastante experiência com AWS. As sessões são práticas e diretas." },
-        ];
-
-        for (const r of reviewTargets) {
-          const avaliacaoId = crypto.randomUUID();
-          await pool.query(
-            `INSERT INTO Avaliacao_Mentor (avaliacao_id, mentor_id, aluno_id, nota, titulo, comentario)
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [avaliacaoId, r.mentorId, alunoTesteId, r.nota, r.titulo, r.comentario]
-          );
-        }
-
-        const mentorIds = [anaBeatrizId!, carlosEduardoId!, marianaId!, rafaelId!];
-        for (const mentorId of mentorIds) {
-          await pool.query(
-            `UPDATE Mentor SET
-               rating = COALESCE((SELECT AVG(nota) FROM Avaliacao_Mentor WHERE mentor_id = ?), 0),
-               total_avaliacoes = (SELECT COUNT(*) FROM Avaliacao_Mentor WHERE mentor_id = ?)
-             WHERE mentor_id = ?`,
-            [mentorId, mentorId, mentorId]
-          );
-        }
-
-        console.log("Reviews criados com sucesso.");
-      } else {
-        console.log("Reviews ja existem.");
-      }
-    }
-
-    console.log("\nSeed completo!");
-    console.log("================================");
-    console.log("Credenciais de teste:");
-    console.log("Aluno:   teste@teste.com / 123456");
-    console.log("Mentor:  mentor@mentor.com / 123456");
-    console.log("Admin:   admin@mockmentor.com / 123456");
-    console.log("Ana:     ana@mentor.com / 123456");
-    console.log("Carlos:  carlos@mentor.com / 123456");
-    console.log("Mariana: mariana@mentor.com / 123456");
-    console.log("Rafael:  rafael@mentor.com / 123456");
-    console.log("================================");
-  } catch (err: any) {
-    console.error("Erro:", err.message);
-    console.error(err.stack);
-  }
-}
-
 async function seed() {
-  const pool = await getPool();
-  try {
-    await seedData(pool);
-  } finally {
-    await pool.end();
+  const passwordHash = await hash("123456", 10);
+  pool = await getPool();
+
+  console.log("🔹 Seeding database...\n");
+
+  // --- Catalog tables ---
+  const languages: [string, string][] = [
+    ["Português", "PT"],
+    ["Inglês", "EN"],
+    ["Espanhol", "ES"],
+  ];
+  for (const [n, s] of languages) {
+    await pool.query("INSERT IGNORE INTO language (name, code) VALUES (?, ?)", [n, s]);
   }
+
+  const technologies: [string, string][] = [
+    ["React", "tech"],
+    ["TypeScript", "tech"],
+    ["Next.js", "tech"],
+    ["Node.js", "tech"],
+    ["Python", "tech"],
+    ["Java", "tech"],
+    ["AWS", "tech"],
+    ["Docker", "tech"],
+    ["PostgreSQL", "tech"],
+  ];
+  for (const [n, c] of technologies) {
+    await pool.query("INSERT IGNORE INTO technology (name, category) VALUES (?, ?)", [n, c]);
+  }
+  console.log("  Catalog tables: OK");
+
+  // --- Helper: create user ---
+  async function createUser(
+    name: string,
+    email: string,
+    cpf: string,
+    isStudent: boolean,
+    isMentor: boolean,
+    isAdmin = false,
+    profileComplete = false
+  ): Promise<number> {
+    const [r] = await pool.query(
+      `INSERT INTO \`user\` (cpf, name, email, phone, password_hash, is_student, is_mentor, is_admin, email_verified, is_mentor_profile_complete)
+       VALUES (?, ?, ?, '(11) 90000-0000', ?, ?, ?, ?, 1, ?)`,
+      [
+        cpf,
+        name,
+        email,
+        passwordHash,
+        isStudent ? 1 : 0,
+        isMentor ? 1 : 0,
+        isAdmin ? 1 : 0,
+        profileComplete ? 1 : 0,
+      ]
+    );
+    const id = (r as any).insertId;
+    console.log(`  ✅ ${email} (id=${id})`);
+    return id;
+  }
+
+  // --- Helper: create student ---
+  async function createStudent(userId: number): Promise<number> {
+    await pool.query("INSERT IGNORE INTO student (user_id) VALUES (?)", [userId]);
+    const [rows] = await pool.query("SELECT id FROM student WHERE user_id = ?", [userId]);
+    return (rows as any[])[0].id;
+  }
+
+  // --- Helper: create mentor ---
+  async function createMentor(
+    userId: number,
+    title: string,
+    description: string,
+    price: number
+  ): Promise<number> {
+    const [r] = await pool.query(
+      "INSERT INTO mentor (user_id, title, description, price_per_session, approved) VALUES (?, ?, ?, ?, 1)",
+      [userId, title, description, price]
+    );
+    return (r as any).insertId;
+  }
+
+  // ============================================================
+  console.log("\nTest Users:");
+  // ============================================================
+
+  // 1. aluno@aluno.com — Student only
+  const aId = await createUser("Aluno Teste", "aluno@aluno.com", "11122233344", true, false);
+  await createStudent(aId);
+
+  // 2. mentor@mentor.com — Mentor only
+  const mId = await createUser(
+    "Mentor Teste",
+    "mentor@mentor.com",
+    "22233344455",
+    false,
+    true,
+    false,
+    true
+  );
+  const mentorPk = await createMentor(
+    mId,
+    "Full Stack Developer",
+    "Mentor experiente com 10+ anos de carreira.",
+    150.0
+  );
+  await pool.query("INSERT INTO user_language (user_id, language_id) VALUES (?,1),(?,2)", [
+    mId,
+    mId,
+  ]);
+  await pool.query("INSERT INTO mentor_language (mentor_id, language_id) VALUES (?,1),(?,2)", [
+    mentorPk,
+    mentorPk,
+  ]);
+  await pool.query(
+    "INSERT INTO mentor_technology (mentor_id, technology_id) VALUES (?,1),(?,2),(?,3)",
+    [mentorPk, mentorPk, mentorPk]
+  );
+  await pool.query(
+    "INSERT INTO availability (mentor_id, day_of_week, start_time, end_time, video_platforms) VALUES (?,1,'09:00','12:00','google_meet,zoom'), (?,1,'14:00','18:00','google_meet'), (?,3,'09:00','12:00','google_meet,microsoft_teams')",
+    [mentorPk, mentorPk, mentorPk]
+  );
+
+  // 3. alunomentor@alunomentor.com — Both
+  const amId = await createUser(
+    "Aluno Mentor",
+    "alunomentor@alunomentor.com",
+    "33344455566",
+    true,
+    true,
+    false,
+    true
+  );
+  await createStudent(amId);
+  const amPk = await createMentor(amId, "Tech Lead", "Especialista em React e Node.js.", 120.0);
+  await pool.query("INSERT INTO user_language (user_id, language_id) VALUES (?,1),(?,2)", [
+    amId,
+    amId,
+  ]);
+  await pool.query("INSERT INTO mentor_language (mentor_id, language_id) VALUES (?,1),(?,2)", [
+    amPk,
+    amPk,
+  ]);
+  await pool.query(
+    "INSERT INTO mentor_technology (mentor_id, technology_id) VALUES (?,1),(?,2),(?,5)",
+    [amPk, amPk, amPk]
+  );
+  await pool.query(
+    "INSERT INTO availability (mentor_id, day_of_week, start_time, end_time, video_platforms) VALUES (?,2,'10:00','13:00','google_meet'), (?,4,'14:00','17:00','zoom')",
+    [amPk, amPk]
+  );
+
+  // 4. admin@admin.com — Administrator
+  await createUser("Administrador", "admin@admin.com", "00000000000", true, true, true, true);
+
+  console.log("\nSeed complete!");
+  console.log(
+    "   aluno@aluno.com | mentor@mentor.com | alunomentor@alunomentor.com | admin@admin.com\n"
+  );
+
+  await pool.end();
 }
 
-seed();
+seed().catch((e) => {
+  console.error("Seed failed:", e.message);
+  process.exit(1);
+});

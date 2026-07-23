@@ -1,33 +1,33 @@
 import pool from "@/infra/database";
 import { RowDataPacket } from "mysql2";
 
-export async function getByAlunoId(alunoId: string): Promise<{
+export async function getByStudentId(studentId: number): Promise<{
   transactions: any[];
   total: number;
 }> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT p.pagamento_id, p.valor, p.status AS pagamento_status,
-            s.titulo, s.area, s.data_hora, s.duracao_min, s.status AS sessao_status,
-            u.nome AS mentor_nome
-     FROM Pagamento p
-     JOIN Sessao s ON s.sessao_id = p.sessao_id
-     JOIN Mentor t ON t.mentor_id = s.mentor_id
-     JOIN Usuario u ON u.usuario_id = t.usuario_id
-     WHERE s.aluno_id = ?
-     ORDER BY s.data_hora DESC`,
-    [alunoId]
+    `SELECT p.id, p.amount, p.status AS payment_status,
+            s.title, s.area, s.scheduled_at, s.duration_min, s.status AS session_status,
+            u.name AS mentor_name
+     FROM payment p
+     JOIN session s ON s.id = p.session_id
+     JOIN mentor t ON t.id = s.mentor_id
+     JOIN \`user\` u ON u.id = t.user_id
+     WHERE s.student_id = ?
+     ORDER BY s.scheduled_at DESC`,
+    [studentId]
   );
 
-  const total = rows.reduce((sum, r: RowDataPacket) => sum + Number(r.valor || 0), 0);
+  const total = rows.reduce((sum, r: RowDataPacket) => sum + Number(r.amount || 0), 0);
 
   return {
     transactions: rows.map((r: RowDataPacket) => ({
-      id: r.pagamento_id,
-      title: r.titulo,
+      id: r.id,
+      title: r.title,
       area: r.area,
-      mentorName: r.mentor_nome,
-      dateTime: r.data_hora,
-      duration: r.duracao_min,
+      mentorName: r.mentor_name,
+      dateTime: r.scheduled_at,
+      duration: r.duration_min,
       status: r.sessao_status,
       valor: Number(r.valor || 0),
     })),

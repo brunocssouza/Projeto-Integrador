@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
       return Response.json({ error: "Não é mentor" }, { status: 403 });
     }
 
-    const result = await getStudents(mentor.mentor_id);
+    const result = await getStudents(mentor.id);
 
     return Response.json({
       stats: {

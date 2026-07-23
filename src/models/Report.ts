@@ -7,32 +7,35 @@ interface ReportData {
   recentActivity: { type: string; description: string; date: string }[];
 }
 
-export async function get(alunoId: string): Promise<ReportData> {
+export async function get(studentId: number): Promise<ReportData> {
   const [statRows] = await pool.query<RowDataPacket[]>(
     `SELECT
        COUNT(*) AS sessoes,
        COALESCE(SUM(duracao_min), 0) AS total_min,
        0 AS media_avaliacao
-     FROM Sessao WHERE aluno_id = ? AND status = 'concluida'`,
-    [alunoId]
+     FROM session WHERE student_id = ? AND status = 'completed'`,
+    [studentId]
   );
 
   const s = statRows[0] || {};
 
   const [sessionRows] = await pool.query<RowDataPacket[]>(
     `SELECT s.sessao_id, s.titulo, s.area, s.data_hora, s.status
-     FROM Sessao s
-     WHERE s.aluno_id = ? AND s.status IN ('concluida', 'em_andamento')
-     ORDER BY s.data_hora DESC LIMIT 5`,
-    [alunoId]
+     FROM session s
+     WHERE s.student_id = ? AND s.status IN ('completed', 'in_progress')
+     ORDER BY s.scheduled_at DESC LIMIT 5`,
+    [studentId]
   );
 
-  const skillsAreas = sessionRows.reduce<Record<string, number>>((acc, r: RowDataPacket) => {
-    if (r.status === "concluida") {
-      acc[r.area] = (acc[r.area] || 0) + 1;
-    }
-    return acc;
-  }, {} as Record<string, number>);
+  const skillsAreas = sessionRows.reduce<Record<string, number>>(
+    (acc, r: RowDataPacket) => {
+      if (r.status === "concluida") {
+        acc[r.area] = (acc[r.area] || 0) + 1;
+      }
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
   const total = Object.values(skillsAreas).reduce((a, b) => a + b, 0) || 1;
   const skillsProgress = Object.entries(skillsAreas).map(([name, count]) => ({

@@ -11,12 +11,12 @@ const JWT_SECRET = new TextEncoder().encode(secret);
 const BCRYPT_ROUNDS = 12;
 
 export interface JwtPayload extends JWTPayload {
-  userId: string;
+  userId: number;
   email: string;
 }
 
 export async function signToken(payload: JwtPayload): Promise<string> {
-  return new SignJWT(payload)
+  return new SignJWT({ ...payload, userId: String(payload.userId) })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("24h")
@@ -26,7 +26,7 @@ export async function signToken(payload: JwtPayload): Promise<string> {
 export async function verifyToken(token: string): Promise<JwtPayload | null> {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
-    return { userId: payload.userId as string, email: payload.email as string };
+    return { userId: Number(payload.userId), email: payload.email as string };
   } catch {
     return null;
   }
@@ -36,10 +36,7 @@ export async function hashPassword(password: string): Promise<string> {
   return hash(password, BCRYPT_ROUNDS);
 }
 
-export async function comparePassword(
-  password: string,
-  hashedPassword: string
-): Promise<boolean> {
+export async function comparePassword(password: string, hashedPassword: string): Promise<boolean> {
   return compare(password, hashedPassword);
 }
 

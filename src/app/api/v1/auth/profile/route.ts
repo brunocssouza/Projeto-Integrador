@@ -6,9 +6,9 @@ export async function PATCH(request: NextRequest) {
   try {
     const payload = await requireAuth(request);
     const body = await request.json();
-    const updates: { nome?: string; email?: string } = {};
+    const updates: { name?: string; email?: string } = {};
 
-    if (typeof body.nome === "string") updates.nome = body.nome;
+    if (typeof body.nome === "string") updates.name = body.nome;
     if (typeof body.email === "string") updates.email = body.email;
 
     if (Object.keys(updates).length === 0) {

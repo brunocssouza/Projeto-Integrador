@@ -6,27 +6,33 @@ import { compare } from "bcryptjs";
 export async function PATCH(request: NextRequest) {
   try {
     const payload = await requireAuth(request);
-    const { senhaAtual, novaSenha } = await request.json();
+    const { currentPassword, newPassword } = await request.json();
 
-    if (!senhaAtual || !novaSenha) {
-      return Response.json({ error: "Senha atual e nova senha são obrigatórias" }, { status: 400 });
+    if (!currentPassword || !newPassword) {
+      return Response.json(
+        { error: "Current password and new password are required" },
+        { status: 400 }
+      );
     }
 
-    if (novaSenha.length < 6) {
-      return Response.json({ error: "Nova senha deve ter no mínimo 6 caracteres" }, { status: 400 });
+    if (newPassword.length < 6) {
+      return Response.json(
+        { error: "New password must be at least 6 characters" },
+        { status: 400 }
+      );
     }
 
     const user = await findById(payload.userId);
     if (!user) {
-      return Response.json({ error: "Usuário não encontrado" }, { status: 404 });
+      return Response.json({ error: "User not found" }, { status: 404 });
     }
 
-    const valid = await compare(senhaAtual, user.senha_hash);
+    const valid = await compare(currentPassword, user.password_hash);
     if (!valid) {
-      return Response.json({ error: "Senha atual incorreta" }, { status: 400 });
+      return Response.json({ error: "Current password is incorrect" }, { status: 400 });
     }
 
-    const novaHash = await hashPassword(novaSenha);
+    const novaHash = await hashPassword(newPassword);
     await changePassword(payload.userId, novaHash);
 
     return Response.json({ message: "Senha alterada com sucesso" });

@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { requireAuth } from "@/infra/auth";
 import { listByUser } from "@/models/SessionList";
 import { checkAvailability, create } from "@/models/Session";
-import { findAlunoByUserId } from "@/models/User";
+import { findStudentByUserId } from "@/models/User";
 import { findById as findMentorById } from "@/models/Mentor";
 
 export async function GET(request: NextRequest) {
@@ -23,39 +23,47 @@ export async function POST(request: NextRequest) {
   try {
     const payload = await requireAuth(request);
 
-    const { mentor_id, titulo, area, data_hora, duracao_min, plataforma_video } = await request.json();
+    const { mentor_id, titulo, area, data_hora, duracao_min, plataforma_video } =
+      await request.json();
+    const mentorId = Number(mentor_id);
 
-    if (!mentor_id || !titulo || !area || !data_hora) {
-      return Response.json({ error: "Campos obrigatórios: mentor_id, titulo, area, data_hora" }, { status: 400 });
+    if (!mentorId || !titulo || !area || !data_hora) {
+      return Response.json(
+        { error: "Campos obrigatórios: mentor_id, titulo, area, data_hora" },
+        { status: 400 }
+      );
     }
 
-    const avail = await checkAvailability(mentor_id, data_hora, duracao_min || 60);
+    const avail = await checkAvailability(mentorId, data_hora, duracao_min || 60);
     if (!avail.available) {
       return Response.json({ error: avail.error }, { status: 400 });
     }
 
-    const alunoId = await findAlunoByUserId(payload.userId);
-    if (!alunoId) {
+    const studentId = await findStudentByUserId(payload.userId);
+    if (!studentId) {
       return Response.json({ error: "Usuário não é aluno" }, { status: 403 });
     }
 
-    const mentor = await findMentorById(mentor_id);
+    const mentor = await findMentorById(mentorId);
     if (!mentor) {
       return Response.json({ error: "Mentor não encontrado" }, { status: 404 });
     }
 
     const sessaoId = await create({
-      aluno_id: alunoId,
-      mentor_id,
-      titulo,
+      student_id: studentId,
+      mentor_id: mentorId,
+      title: titulo,
       area,
-      data_hora,
-      duracao_min: duracao_min || 60,
-      plataforma_video: plataforma_video || undefined,
-      preco: Number(mentor.preco_por_sessao),
+      scheduled_at: data_hora,
+      duration_min: duracao_min || 60,
+      video_platform: plataforma_video || undefined,
+      preco: Number(mentor.price_per_session),
     });
 
-    return Response.json({ message: "Sessão agendada com sucesso", sessao_id: sessaoId }, { status: 201 });
+    return Response.json(
+      { message: "Sessão agendada com sucesso", sessao_id: sessaoId },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Sessions POST error:", error);
     return Response.json({ error: "Erro interno do servidor" }, { status: 500 });

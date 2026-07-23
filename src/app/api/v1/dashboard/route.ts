@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { requireAuth } from "@/infra/auth";
-import { findById as findUserById, findAlunoByUserId } from "@/models/User";
+import { findById as findUserById, findStudentByUserId } from "@/models/User";
 import { get } from "@/models/Dashboard";
 
 export async function GET(request: NextRequest) {
@@ -12,11 +12,11 @@ export async function GET(request: NextRequest) {
       return Response.json({ error: "Usuário não encontrado" }, { status: 404 });
     }
 
-    const alunoId = await findAlunoByUserId(payload.userId);
+    const studentId = await findStudentByUserId(payload.userId);
 
-    if (!alunoId) {
+    if (!studentId) {
       return Response.json({
-        user: { name: user.nome },
+        user: { name: user.name },
         nextSession: null,
         stats: { totalSessoes: 0, concluidas: 0, horasPratica: 0 },
         recentSessions: [],
@@ -24,10 +24,10 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const data = await get(alunoId);
+    const data = await get(studentId);
 
     return Response.json({
-      user: { name: user.nome },
+      user: { name: user.name },
       ...data,
     });
   } catch (error) {

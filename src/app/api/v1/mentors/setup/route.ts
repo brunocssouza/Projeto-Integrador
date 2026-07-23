@@ -1,6 +1,12 @@
 import { NextRequest } from "next/server";
 import { requireAuth } from "@/infra/auth";
-import { findByUserId, create, update as updateMentor, syncTechnologies, setProfileComplete } from "@/models/Mentor";
+import {
+  findByUserId,
+  create,
+  update as updateMentor,
+  syncTechnologies,
+  setProfileComplete,
+} from "@/models/Mentor";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,14 +20,26 @@ export async function POST(request: NextRequest) {
     let existing = await findByUserId(payload.userId);
 
     if (existing) {
-      await updateMentor(existing.mentor_id, { cargo, empresa: empresa || null, descricao, experiencia: experiencia || null, precoPorSessao: preco });
+      await updateMentor(existing.id, {
+        cargo: cargo,
+        empresa: empresa || null,
+        descricao: descricao,
+        experiencia: experiencia || null,
+        precoPorSessao: preco,
+      });
     } else {
-      const mentorId = await create(payload.userId, { cargo, empresa: empresa || null, descricao, experiencia: experiencia || null, preco });
+      const mentorId = await create(payload.userId, {
+        title: cargo,
+        company: empresa || null,
+        description: descricao,
+        professionalExperience: experiencia || null,
+        pricePerSession: preco,
+      });
       existing = await findByUserId(payload.userId);
     }
 
     if (existing) {
-      await syncTechnologies(existing.mentor_id, tecnologias || []);
+      await syncTechnologies(existing.id, tecnologias || []);
     }
 
     await setProfileComplete(payload.userId);

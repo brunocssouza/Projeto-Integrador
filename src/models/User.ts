@@ -1,126 +1,145 @@
 import pool from "@/infra/database";
+import prisma from "@/lib/prisma";
 import { RowDataPacket, ResultSetHeader } from "mysql2";
 
 export interface UserRow {
-  usuario_id: string;
+  id: number;
   cpf: string;
-  nome: string;
+  name: string;
   email: string;
-  telefone: string;
-  senha_hash: string;
+  phone: string;
+  password_hash: string;
   avatar_url: string | null;
-  is_aluno: number;
+  is_student: number;
   is_mentor: number;
   is_admin: number;
-  perfil_mentor_completo: number;
+  is_mentor_profile_complete: number;
+  email_verified: number;
 }
 
-export type SafeUser = Omit<UserRow, "senha_hash" | "cpf">;
+export type SafeUser = Omit<UserRow, "password_hash" | "cpf">;
 
 function toSafeUser(row: UserRow): SafeUser {
-  const { senha_hash, cpf, ...safe } = row;
+  const { password_hash, cpf, ...safe } = row;
   return safe;
 }
 
-export async function findById(userId: string): Promise<UserRow | null> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    "SELECT * FROM Usuario WHERE usuario_id = ?",
-    [userId]
-  );
+export async function findById(userId: number): Promise<UserRow | null> {
+  const [rows] = await pool.query<RowDataPacket[]>(`SELECT * FROM \`user\` WHERE id = ?`, [userId]);
   return rows.length > 0 ? (rows[0] as UserRow) : null;
 }
 
 export async function findByEmail(email: string): Promise<UserRow | null> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    "SELECT * FROM Usuario WHERE email = ?",
-    [email]
-  );
+  const [rows] = await pool.query<RowDataPacket[]>(`SELECT * FROM \`user\` WHERE email = ?`, [
+    email,
+  ]);
   return rows.length > 0 ? (rows[0] as UserRow) : null;
 }
 
 export async function create(data: {
   cpf: string;
-  nome: string;
+  name: string;
   email: string;
-  telefone: string;
-  senha_hash: string;
-  is_aluno: number;
+  phone: string;
+  password_hash: string;
+  is_student: number;
   is_mentor: number;
-}): Promise<string> {
-  const usuarioId = crypto.randomUUID();
-  await pool.query<ResultSetHeader>(
-    `INSERT INTO Usuario (usuario_id, cpf, nome, email, telefone, senha_hash, is_aluno, is_mentor, perfil_mentor_completo)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [usuarioId, data.cpf, data.nome, data.email, data.telefone, data.senha_hash, data.is_aluno, data.is_mentor, data.is_mentor ? 0 : 1]
+  email_verified?: number;
+}): Promise<number> {
+  const [result] = await pool.query<ResultSetHeader>(
+    `INSERT INTO \`user\` (cpf, name, email, phone, password_hash, is_student, is_mentor, is_mentor_profile_complete, email_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      data.cpf,
+      data.name,
+      data.email,
+      data.phone,
+      data.password_hash,
+      data.is_student,
+      data.is_mentor,
+      data.is_mentor ? 0 : 1,
+      data.email_verified ?? 0,
+    ]
   );
-  return usuarioId;
+  return result.insertId;
 }
 
-export async function updateProfile(userId: string, data: { nome?: string; email?: string }): Promise<void> {
+export async function updateProfile(
+  userId: number,
+  data: { name?: string; email?: string; phone?: string; avatar_url?: string }
+): Promise<void> {
   const updates: string[] = [];
   const values: (string | number)[] = [];
-
-  if (data.nome !== undefined) {
-    updates.push("nome = ?");
-    values.push(data.nome);
+  if (data.name !== undefined) {
+    updates.push("name = ?");
+    values.push(data.name);
   }
   if (data.email !== undefined) {
     updates.push("email = ?");
     values.push(data.email);
   }
-
+  if (data.phone !== undefined) {
+    updates.push("phone = ?");
+    values.push(data.phone);
+  }
+  if (data.avatar_url !== undefined) {
+    updates.push("avatar_url = ?");
+    values.push(data.avatar_url);
+  }
   if (updates.length === 0) return;
-
   values.push(userId);
-  await pool.query(`UPDATE Usuario SET ${updates.join(", ")} WHERE usuario_id = ?`, values);
+  await pool.query(`UPDATE \`user\` SET ${updates.join(", ")} WHERE id = ?`, values);
 }
 
-export async function updateAvatar(userId: string, avatarUrl: string): Promise<void> {
-  await pool.query("UPDATE Usuario SET avatar_url = ? WHERE usuario_id = ?", [avatarUrl, userId]);
+export async function updateAvatar(userId: number, avatarUrl: string): Promise<void> {
+  await pool.query(`UPDATE \`user\` SET avatar_url = ? WHERE id = ?`, [avatarUrl, userId]);
 }
 
-export async function changePassword(userId: string, novaSenhaHash: string): Promise<void> {
-  await pool.query("UPDATE Usuario SET senha_hash = ? WHERE usuario_id = ?", [novaSenhaHash, userId]);
+export async function changePassword(userId: number, newPasswordHash: string): Promise<void> {
+  await pool.query(`UPDATE \`user\` SET password_hash = ? WHERE id = ?`, [newPasswordHash, userId]);
 }
 
-export async function isAdmin(userId: string): Promise<boolean> {
+export async function isAdmin(userId: number): Promise<boolean> {
   const user = await findById(userId);
   return user?.is_admin === 1;
 }
 
-export async function deleteAccount(userId: string): Promise<void> {
+export async function deleteAccount(userId: number): Promise<void> {
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
-
-    const [alunoRows] = await conn.query<RowDataPacket[]>(
-      "SELECT aluno_id FROM Aluno WHERE usuario_id = ?", [userId]
+    const [studentRows] = await conn.query<RowDataPacket[]>(
+      "SELECT id FROM student WHERE user_id = ?",
+      [userId]
     );
     const [mentorRows] = await conn.query<RowDataPacket[]>(
-      "SELECT mentor_id FROM Mentor WHERE usuario_id = ?", [userId]
+      "SELECT id FROM mentor WHERE user_id = ?",
+      [userId]
     );
-
-    const alunoId = alunoRows.length > 0 ? alunoRows[0].aluno_id : null;
-    const mentorId = mentorRows.length > 0 ? mentorRows[0].mentor_id : null;
+    const studentId = studentRows.length > 0 ? studentRows[0].id : null;
+    const mentorId = mentorRows.length > 0 ? mentorRows[0].id : null;
 
     if (mentorId) {
-      await conn.query("DELETE FROM Pagamento WHERE sessao_id IN (SELECT sessao_id FROM Sessao WHERE mentor_id = ?)", [mentorId]);
-      await conn.query("DELETE FROM Avaliacao_Mentor WHERE mentor_id = ?", [mentorId]);
-      await conn.query("DELETE FROM Disponibilidade WHERE mentor_id = ?", [mentorId]);
-      await conn.query("DELETE FROM Mentor_Tecnologia WHERE mentor_id = ?", [mentorId]);
-      await conn.query("DELETE FROM Mentor_Idioma WHERE mentor_id = ?", [mentorId]);
-      await conn.query("DELETE FROM Sessao WHERE mentor_id = ?", [mentorId]);
-      await conn.query("DELETE FROM Mentor WHERE mentor_id = ?", [mentorId]);
+      await conn.query(
+        "DELETE FROM payment WHERE session_id IN (SELECT id FROM session WHERE mentor_id = ?)",
+        [mentorId]
+      );
+      await conn.query("DELETE FROM mentor_review WHERE mentor_id = ?", [mentorId]);
+      await conn.query("DELETE FROM availability WHERE mentor_id = ?", [mentorId]);
+      await conn.query("DELETE FROM mentor_technology WHERE mentor_id = ?", [mentorId]);
+      await conn.query("DELETE FROM mentor_language WHERE mentor_id = ?", [mentorId]);
+      await conn.query("DELETE FROM session WHERE mentor_id = ?", [mentorId]);
+      await conn.query("DELETE FROM mentor WHERE id = ?", [mentorId]);
     }
-
-    if (alunoId) {
-      await conn.query("DELETE FROM Pagamento WHERE sessao_id IN (SELECT sessao_id FROM Sessao WHERE aluno_id = ?)", [alunoId]);
-      await conn.query("DELETE FROM Avaliacao_Mentor WHERE aluno_id = ?", [alunoId]);
-      await conn.query("DELETE FROM Sessao WHERE aluno_id = ?", [alunoId]);
-      await conn.query("DELETE FROM Aluno WHERE aluno_id = ?", [alunoId]);
+    if (studentId) {
+      await conn.query(
+        "DELETE FROM payment WHERE session_id IN (SELECT id FROM session WHERE student_id = ?)",
+        [studentId]
+      );
+      await conn.query("DELETE FROM mentor_review WHERE student_id = ?", [studentId]);
+      await conn.query("DELETE FROM session WHERE student_id = ?", [studentId]);
+      await conn.query("DELETE FROM student WHERE id = ?", [studentId]);
     }
-
-    await conn.query("DELETE FROM Usuario WHERE usuario_id = ?", [userId]);
+    await conn.query("DELETE FROM `user` WHERE id = ?", [userId]);
     await conn.commit();
   } catch (e) {
     await conn.rollback();
@@ -130,10 +149,11 @@ export async function deleteAccount(userId: string): Promise<void> {
   }
 }
 
-export async function findAlunoByUserId(userId: string): Promise<string | null> {
-  const [rows] = await pool.query<RowDataPacket[]>(
-    "SELECT aluno_id FROM Aluno WHERE usuario_id = ?",
-    [userId]
-  );
-  return rows.length > 0 ? String(rows[0].aluno_id) : null;
+export async function findStudentByUserId(userId: number): Promise<number | null> {
+  const [rows] = await pool.query<RowDataPacket[]>("SELECT id FROM student WHERE user_id = ?", [
+    userId,
+  ]);
+  return rows.length > 0 ? rows[0].id : null;
 }
+
+export const findAlunoByUserId = findStudentByUserId;
