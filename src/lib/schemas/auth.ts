@@ -1,6 +1,15 @@
 import { z } from "zod";
 import { brazilianPhoneSchema, cpfSchema } from "./common";
 
+export const mentorProfileSchema = z.object({
+  title: z.string().min(2, "Cargo é obrigatório").max(120),
+  company: z.string().max(120).optional(),
+  description: z.string().min(30, "Descrição deve ter no mínimo 30 caracteres").max(2000),
+  professionalExperience: z.string().max(2000).optional(),
+  pricePerSession: z.number().min(0, "Preço deve ser positivo"),
+  technologies: z.array(z.string()).min(1, "Selecione ao menos uma tecnologia"),
+});
+
 export const registerSchema = z
   .object({
     name: z.string().min(3, "Name must be at least 3 characters").max(120),
@@ -11,10 +20,15 @@ export const registerSchema = z
     confirmPassword: z.string(),
     isStudent: z.boolean().default(true),
     isMentor: z.boolean().default(false),
+    mentorProfile: mentorProfileSchema.optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
+  })
+  .refine((data) => !data.isMentor || !!data.mentorProfile, {
+    message: "Perfil do mentor é obrigatório",
+    path: ["mentorProfile"],
   });
 
 export const loginSchema = z.object({

@@ -13,6 +13,9 @@ export interface User {
   languages: string[];
   is_aluno: boolean;
   is_mentor: boolean;
+  is_admin: boolean;
+  mentor_approval_status: string | null;
+  mentor_rejection_reason: string | null;
   perfil_mentor_completo: boolean;
 }
 
@@ -87,8 +90,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isLoading) return;
     if (user && isPublic) {
-      if (user.is_mentor && !user.perfil_mentor_completo) {
+      if (user.is_admin) {
+        router.push("/admin");
+      } else if (user.is_mentor && !user.perfil_mentor_completo) {
         router.push("/mentor/setup");
+      } else if (user.is_mentor && !user.is_aluno) {
+        router.push("/mentor/alunos");
       } else {
         router.push("/dashboard");
       }

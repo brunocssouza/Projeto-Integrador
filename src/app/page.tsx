@@ -138,11 +138,7 @@ export default function LandingPage() {
               href="/"
               className="flex items-center gap-3 text-white no-underline"
             >
-              <div className="w-9 h-9 border-2 border-white rounded-full flex items-center justify-center">
-                <span className="material-symbols-outlined text-[18px]">
-                  rocket_launch
-                </span>
-              </div>
+
               <span className="font-headline-md font-bold text-[20px]">
                 Mock Mentor
               </span>
@@ -294,7 +290,7 @@ export default function LandingPage() {
                 <h3 className="font-headline-sm text-[20px] text-primary font-bold mb-2">
                   Escolha um mentor
                 </h3>
-                
+
               </div>
             </div>
 
@@ -306,7 +302,7 @@ export default function LandingPage() {
                 <h3 className="font-headline-sm text-[20px] text-primary font-bold mb-2">
                   Agende sua entrevista
                 </h3>
-               
+
               </div>
             </div>
 
@@ -318,7 +314,7 @@ export default function LandingPage() {
                 <h3 className="font-headline-sm text-[20px] text-primary font-bold mb-2">
                   Receba feedback personalizado
                 </h3>
-                
+
               </div>
             </div>
           </div>
@@ -393,11 +389,7 @@ export default function LandingPage() {
       <footer className="py-10 bg-surface-container-lowest border-t border-outline-variant/30">
         <div className="max-w-[900px] mx-auto px-6 lg:px-xl flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 border border-primary rounded-full flex items-center justify-center">
-              <span className="material-symbols-outlined text-primary text-[12px]">
-                rocket_launch
-              </span>
-            </div>
+
             <span className="text-[14px] font-semibold text-primary">
               Mock Mentor
             </span>

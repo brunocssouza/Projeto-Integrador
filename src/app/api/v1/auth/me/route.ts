@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import pool from "@/infra/database";
-import { requireAuth } from "@/infra/auth";
+import { requireAuth, AuthError } from "@/infra/auth";
 import { findById } from "@/models/User";
 import { RowDataPacket } from "mysql2";
 
@@ -20,6 +20,11 @@ export async function GET(request: NextRequest) {
       [user.id]
     );
 
+    const [mentorRow] = await pool.query<RowDataPacket[]>(
+      `SELECT approval_status, rejection_reason FROM mentor WHERE user_id = ?`,
+      [user.id]
+    );
+
     return Response.json({
       user: {
         id: user.id,
@@ -29,11 +34,17 @@ export async function GET(request: NextRequest) {
         avatar_url: user.avatar_url,
         is_aluno: user.is_student === 1,
         is_mentor: user.is_mentor === 1,
+        is_admin: user.is_admin === 1,
+        mentor_approval_status: mentorRow[0]?.approval_status ?? null,
+        mentor_rejection_reason: mentorRow[0]?.rejection_reason ?? null,
         perfil_mentor_completo: user.is_mentor_profile_complete === 1,
-        languages: langs.map((l: RowDataPacket) => l.sigla),
+        languages: langs.map((l: RowDataPacket) => l.code),
       },
     });
   } catch (error) {
+    if (error instanceof AuthError) {
+      return Response.json({ error: error.message }, { status: error.status });
+    }
     console.error("Me error:", error);
     return Response.json({ error: "Erro interno do servidor" }, { status: 500 });
   }

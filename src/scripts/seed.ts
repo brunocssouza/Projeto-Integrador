@@ -89,7 +89,7 @@ async function seed() {
     price: number
   ): Promise<number> {
     const [r] = await pool.query(
-      "INSERT INTO mentor (user_id, title, description, price_per_session, approved) VALUES (?, ?, ?, ?, 1)",
+      "INSERT INTO mentor (user_id, title, description, price_per_session, approval_status) VALUES (?, ?, ?, ?, 'approved')",
       [userId, title, description, price]
     );
     return (r as any).insertId;

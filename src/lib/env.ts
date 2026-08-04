@@ -17,6 +17,12 @@ const envSchema = z.object({
   APP_URL: z.string().url().default("http://localhost:3000"),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 
+  // Redis (shared cache / rate limit — required for multi-instance)
+  REDIS_URL: z.string().optional(),
+
+  // Database pool
+  DB_CONNECTION_LIMIT: z.coerce.number().optional().default(10),
+
   // Email (Resend)
   RESEND_API_KEY: z.string().optional(),
 

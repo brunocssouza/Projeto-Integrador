@@ -57,11 +57,7 @@ export default function LoginPage() {
           href="/"
           className="flex items-center gap-2.5 no-underline mb-12 mx-auto w-fit"
         >
-          <div className="w-8 h-8 border border-primary rounded-full flex items-center justify-center">
-            <span className="material-symbols-outlined text-primary text-[14px]">
-              rocket_launch
-            </span>
-          </div>
+
           <span className="text-[16px] font-semibold text-primary">
             Mock Mentor
           </span>

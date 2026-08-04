@@ -28,28 +28,29 @@ export async function get(studentId: number): Promise<{
   );
 
   const [recentRows] = await pool.query<RowDataPacket[]>(
-    `SELECT s.titulo, s.data_hora, s.status, u.nome AS mentor_nome
-     FROM Sessao s
-     JOIN Mentor t ON t.mentor_id = s.mentor_id
-     JOIN Usuario u ON u.usuario_id = t.usuario_id
-     WHERE s.aluno_id = ? AND s.status IN ('concluida', 'em_andamento', 'agendada')
-     ORDER BY s.data_hora DESC LIMIT 5`,
+    `SELECT s.id, s.title, s.scheduled_at, s.status, u.name AS mentor_name
+     FROM session s
+     JOIN mentor t ON t.id = s.mentor_id
+     JOIN \`user\` u ON u.id = t.user_id
+     WHERE s.student_id = ? AND s.status IN ('completed', 'in_progress', 'scheduled')
+     ORDER BY s.scheduled_at DESC LIMIT 5`,
     [studentId]
   );
 
   const [mentorList] = await pool.query<RowDataPacket[]>(
-    `SELECT t.mentor_id, u.nome, t.cargo, t.empresa, t.preco_por_sessao,
-            COALESCE((SELECT AVG(nota) FROM Avaliacao_Mentor WHERE mentor_id = t.mentor_id), 0) AS rating
-     FROM Mentor t
-     JOIN Usuario u ON u.usuario_id = t.usuario_id
+    `SELECT t.id AS mentor_id, u.name AS nome, t.title AS cargo, t.company AS empresa,
+            t.price_per_session AS preco_por_sessao,
+            COALESCE((SELECT AVG(rating) FROM mentor_review WHERE mentor_id = t.id), 0) AS rating
+     FROM mentor t
+     JOIN \`user\` u ON u.id = t.user_id
      ORDER BY rating DESC LIMIT 3`
   );
 
   const mentorsWithTechs = await Promise.all(
     mentorList.map(async (m: RowDataPacket) => {
       const [techs] = await pool.query<RowDataPacket[]>(
-        `SELECT te.nome FROM Mentor_Tecnologia tt
-         JOIN Tecnologia te ON te.tecnologia_id = tt.tecnologia_id
+        `SELECT te.name AS nome FROM mentor_technology tt
+         JOIN technology te ON te.id = tt.technology_id
          WHERE tt.mentor_id = ?`,
         [m.mentor_id]
       );
@@ -72,13 +73,13 @@ export async function get(studentId: number): Promise<{
     nextSession:
       nextSessao.length > 0
         ? {
-            id: nextSessao[0].sessao_id,
-            title: nextSessao[0].titulo,
+            id: nextSessao[0].id,
+            title: nextSessao[0].title,
             area: nextSessao[0].area,
-            dateTime: nextSessao[0].data_hora,
-            duration: nextSessao[0].duracao_min,
-            platform: nextSessao[0].plataforma_video,
-            mentorName: nextSessao[0].mentor_nome,
+            dateTime: nextSessao[0].scheduled_at,
+            duration: nextSessao[0].duration_min,
+            platform: nextSessao[0].video_platform,
+            mentorName: nextSessao[0].mentor_name,
             mentorRole: nextSessao[0].mentor_role,
           }
         : null,
@@ -88,10 +89,11 @@ export async function get(studentId: number): Promise<{
       horasPratica: Math.round(totalMin / 60),
     },
     recentSessions: recentRows.map((r: RowDataPacket) => ({
-      title: r.titulo,
-      dateTime: r.data_hora,
+      id: r.id,
+      title: r.title,
+      dateTime: r.scheduled_at,
       status: r.status,
-      mentorName: r.mentor_nome,
+      mentorName: r.mentor_name,
     })),
     mentors: mentorsWithTechs,
   };
