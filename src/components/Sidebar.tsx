@@ -33,35 +33,32 @@ export default function Sidebar() {
       pathname.startsWith("/mentor/configuracoes")) &&
     pathname !== "/mentor/setup";
   const userIsMentor = user?.is_mentor ?? false;
+  const userIsAluno = user?.is_aluno ?? false;
   const perfilCompleto = user?.perfil_mentor_completo ?? false;
 
+  const canToggle = userIsMentor && userIsAluno;
+  const userIsAdmin = user?.is_admin ?? false;
   const navItems = isMentorMode ? NAV_ITEMS.mentor : NAV_ITEMS.student;
 
-  const initials = user?.name
-    ?.split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase() || "U";
+  const initials =
+    user?.name
+      ?.split(" ")
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "U";
 
   return (
     <aside className="w-[260px] bg-white border-r border-outline-variant/30 flex flex-col fixed h-screen z-50">
       {/* Logo */}
       <div className="px-5 pt-7 pb-6">
         <Link href="/" className="flex items-center gap-2.5 no-underline">
-          <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center">
-            <span className="material-symbols-outlined text-white text-[16px]">
-              rocket_launch
-            </span>
-          </div>
-          <span className="text-[15px] font-bold text-primary tracking-tight">
-            Mock Mentor
-          </span>
+          <span className="text-[15px] font-bold text-primary tracking-tight">Mock Mentor</span>
         </Link>
       </div>
 
       {/* Mode Toggle */}
-      {userIsMentor && (
+      {canToggle && (
         <div className="px-4 mb-2">
           <div className="bg-surface-container-low rounded-xl p-1 flex">
             <Link
@@ -106,14 +103,31 @@ export default function Sidebar() {
                     : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface"
                 }`}
               >
-                <span className="material-symbols-outlined text-[20px]">
-                  {item.icon}
-                </span>
+                <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
                 {item.label}
               </Link>
             );
           })}
         </div>
+
+        {userIsAdmin && (
+          <div className="mt-6 pt-4 border-t border-outline-variant/20">
+            <p className="text-[11px] font-semibold text-on-surface-variant/40 uppercase tracking-widest px-3 mb-2">
+              Administração
+            </p>
+            <Link
+              href="/admin"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-all no-underline ${
+                pathname.startsWith("/admin")
+                  ? "bg-orange-500 text-white"
+                  : "text-orange-600 hover:bg-orange-50"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[20px]">shield_person</span>
+              Painel Admin
+            </Link>
+          </div>
+        )}
       </nav>
 
       {/* Bottom */}
@@ -146,9 +160,7 @@ export default function Sidebar() {
             <p className="text-[13px] font-semibold text-primary truncate">
               {user?.name || "Usuário"}
             </p>
-            <p className="text-[11px] text-on-surface-variant truncate">
-              {user?.email || ""}
-            </p>
+            <p className="text-[11px] text-on-surface-variant truncate">{user?.email || ""}</p>
           </div>
           <button
             onClick={logout}

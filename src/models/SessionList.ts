@@ -9,7 +9,7 @@ export async function listByUser(
   isAluno: boolean;
 }> {
   const [userRows] = await pool.query<RowDataPacket[]>(
-    "SELECT is_aluno, is_mentor FROM usuario WHERE usuario_id = ?",
+    "SELECT is_student, is_mentor FROM `user` WHERE id = ?",
     [userId]
   );
 

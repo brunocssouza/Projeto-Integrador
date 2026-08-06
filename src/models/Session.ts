@@ -56,6 +56,7 @@ export async function verifyOwnership(sessaoId: number, userId: number): Promise
 export async function create(data: {
   student_id: number;
   mentor_id: number;
+  payer_user_id: number;
   title: string;
   area: string;
   scheduled_at: string;
@@ -79,8 +80,8 @@ export async function create(data: {
   const sessaoId = result.insertId;
 
   await pool.query(
-    "INSERT INTO payment (session_id, amount, method, status) VALUES (?, ?, 'pix', 'pending')",
-    [sessaoId, data.preco]
+    "INSERT INTO payment (session_id, payer_user_id, amount, method, status) VALUES (?, ?, ?, 'pix', 'pending')",
+    [sessaoId, data.payer_user_id, data.preco]
   );
 
   return sessaoId;
@@ -133,6 +134,9 @@ export async function checkAvailability(
   durationMin: number
 ): Promise<{ available: boolean; error?: string }> {
   const sessionDate = new Date(scheduledAt);
+  if (isNaN(sessionDate.getTime())) {
+    return { available: false, error: "Data e hora inválidas" };
+  }
   const now = new Date();
   const diffHours = (sessionDate.getTime() - now.getTime()) / (1000 * 60 * 60);
 
@@ -166,6 +170,17 @@ export async function checkAvailability(
   }
 
   return { available: true };
+}
+
+export async function getBookedSlots(
+  mentorId: number
+): Promise<{ scheduled_at: string; status: string }[]> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT scheduled_at, status FROM session
+     WHERE mentor_id = ? AND status != 'cancelled'`,
+    [mentorId]
+  );
+  return rows as { scheduled_at: string; status: string }[];
 }
 
 export async function findByIdWithDetails(sessaoId: number): Promise<any> {

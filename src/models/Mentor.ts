@@ -131,6 +131,13 @@ export async function list(): Promise<any[]> {
         [row.id]
       );
 
+      const [langs] = await pool.query<RowDataPacket[]>(
+        `SELECT i.code AS sigla, i.name FROM mentor_language tl
+         JOIN language i ON i.id = tl.language_id
+         WHERE tl.mentor_id = ?`,
+        [row.id]
+      );
+
       const [ratingRows] = await pool.query<RowDataPacket[]>(
         `SELECT COUNT(*) AS total, COALESCE(AVG(rating), 0) AS media
          FROM mentor_review WHERE mentor_id = ?`,
@@ -150,6 +157,7 @@ export async function list(): Promise<any[]> {
         rating: avgRating,
         price: Number(row.price_per_session),
         tags: techs.map((t: RowDataPacket) => t.name),
+        languages: langs.map((l: RowDataPacket) => ({ sigla: l.sigla, name: l.name })),
         description: row.description,
         avatar_url: row.avatar_url,
         totalReviews,
@@ -179,7 +187,7 @@ export async function getProfile(mentorId: number): Promise<any> {
   );
 
   const [langs] = await pool.query<RowDataPacket[]>(
-    `SELECT i.code, i.name FROM mentor_language tl
+    `SELECT i.code AS sigla, i.name FROM mentor_language tl
      JOIN language i ON i.id = tl.language_id
      WHERE tl.mentor_id = ?`,
     [mentorId]
@@ -208,8 +216,8 @@ export async function getProfile(mentorId: number): Promise<any> {
     id: row.id,
     name: row.name,
     email: row.email,
-    role: row.title,
-    company: row.company,
+    cargo: row.title,
+    empresa: row.company,
     description: row.description,
     experience: row.professional_experience,
     price: Number(row.price_per_session),
@@ -225,7 +233,7 @@ export async function getProfile(mentorId: number): Promise<any> {
     totalReviews: reviews.length,
     avatar_url: row.avatar_url,
     technologies: techs.map((t: RowDataPacket) => t.name),
-    languages: langs.map((l: RowDataPacket) => ({ code: l.code, name: l.name })),
+    languages: langs.map((l: RowDataPacket) => ({ sigla: l.sigla, name: l.name })),
     reviews: reviews.map((r: RowDataPacket) => ({
       id: r.id,
       rating: Number(r.rating),
@@ -293,7 +301,7 @@ export async function getStudents(
        SUM(CASE WHEN s.status = 'completed' THEN 1 ELSE 0 END) AS sessoes_mes,
        COALESCE((SELECT AVG(rating) FROM mentor_review WHERE mentor_id = ?), 0) AS media
      FROM session s
-     WHERE s.mentor_id = ? AND s.status IN ('completed', 'in_progress')`,
+     WHERE s.mentor_id = ? AND s.status != 'cancelled'`,
     [mentorId, mentorId]
   );
 
@@ -305,7 +313,7 @@ export async function getStudents(
      FROM student al
      JOIN \`user\` u ON u.id = al.user_id
      JOIN session s ON s.student_id = al.id
-     WHERE s.mentor_id = ? AND s.status = 'completed'
+     WHERE s.mentor_id = ? AND s.status != 'cancelled'
      GROUP BY al.id, u.name
      ORDER BY ultima_sessao DESC`,
     [mentorId]

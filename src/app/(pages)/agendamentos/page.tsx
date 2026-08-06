@@ -2,35 +2,36 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { canJoinSession } from "@/lib/session-join";
 
 interface Session {
-  sessao_id: number;
-  titulo: string;
+  id: number;
+  title: string;
   area: string;
-  data_hora: string;
-  duracao_min: number;
+  scheduled_at: string;
+  duration_min: number;
   status: string;
-  status_reserva: string;
-  plataforma_video: string | null;
-  link_reuniao: string | null;
-  mentor_nome: string;
-  mentor_cargo: string;
-  mentor_empresa: string | null;
-  joined_aluno_at: string | null;
+  reservation_status: string;
+  video_platform: string | null;
+  meeting_link: string | null;
+  mentor_name: string;
+  mentor_title: string;
+  mentor_company: string | null;
+  joined_student_at: string | null;
   joined_mentor_at: string | null;
 }
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  agendada: { label: "Agendada", color: "bg-blue-50 text-blue-600" },
-  em_andamento: { label: "Em Andamento", color: "bg-amber-50 text-amber-600" },
-  concluida: { label: "Concluída", color: "bg-green-50 text-green-600" },
-  cancelada: { label: "Cancelada", color: "bg-red-50 text-red-500" },
+  scheduled: { label: "Agendada", color: "bg-blue-50 text-blue-600" },
+  in_progress: { label: "Em Andamento", color: "bg-amber-50 text-amber-600" },
+  completed: { label: "Concluída", color: "bg-green-50 text-green-600" },
+  cancelled: { label: "Cancelada", color: "bg-red-50 text-red-500" },
 };
 
 const RESERVA_LABELS: Record<string, { label: string; color: string }> = {
-  pendente: { label: "Pendente", color: "bg-yellow-50 text-yellow-600" },
-  aprovada: { label: "Aprovada", color: "bg-green-50 text-green-600" },
-  recusada: { label: "Recusada", color: "bg-red-50 text-red-500" },
+  pending: { label: "Pendente", color: "bg-yellow-50 text-yellow-600" },
+  approved: { label: "Aprovada", color: "bg-green-50 text-green-600" },
+  rejected: { label: "Recusada", color: "bg-red-50 text-red-500" },
 };
 
 const PLATFORM_LABELS: Record<string, string> = {
@@ -41,8 +42,18 @@ const PLATFORM_LABELS: Record<string, string> = {
 };
 
 const MONTH_NAMES = [
-  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
 ];
 
 const DAY_NAMES = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -63,7 +74,13 @@ export default function AgendamentosPage() {
   const { user } = useAuth();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "agendada" | "concluida" | "cancelada">("all");
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 30000);
+    return () => clearInterval(id);
+  }, []);
+  const [filter, setFilter] = useState<"all" | "scheduled" | "completed" | "cancelled">("all");
 
   const now = new Date();
   const [currentMonth, setCurrentMonth] = useState(now.getMonth());
@@ -84,7 +101,7 @@ export default function AgendamentosPage() {
 
   const sessionsByDate: Record<string, Session[]> = {};
   sessions.forEach((s) => {
-    const d = new Date(s.data_hora);
+    const d = new Date(s.scheduled_at);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     if (!sessionsByDate[key]) sessionsByDate[key] = [];
     sessionsByDate[key].push(s);
@@ -97,7 +114,7 @@ export default function AgendamentosPage() {
 
   const selectedDateKey = formatDateKey(currentYear, currentMonth, selectedDay);
   const selectedDaySessions = filteredSessions.filter((s) => {
-    const d = new Date(s.data_hora);
+    const d = new Date(s.scheduled_at);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     return key === selectedDateKey;
   });
@@ -125,9 +142,7 @@ export default function AgendamentosPage() {
 
   const isToday = (day: number) => {
     return (
-      day === now.getDate() &&
-      currentMonth === now.getMonth() &&
-      currentYear === now.getFullYear()
+      day === now.getDate() && currentMonth === now.getMonth() && currentYear === now.getFullYear()
     );
   };
 
@@ -138,9 +153,7 @@ export default function AgendamentosPage() {
   return (
     <div className="p-8 sm:p-12 lg:p-16 w-full max-w-[1200px] mx-auto min-h-screen">
       <div className="mb-8">
-        <h1 className="text-[28px] font-bold text-primary mb-1">
-          Meus Agendamentos
-        </h1>
+        <h1 className="text-[28px] font-bold text-primary mb-1">Meus Agendamentos</h1>
         <p className="text-on-surface-variant text-[14px]">
           Gerencie suas sessões de mentoria, {user?.name?.split(" ")[0]}.
         </p>
@@ -241,9 +254,9 @@ export default function AgendamentosPage() {
             {(
               [
                 { key: "all", label: "Todos" },
-                { key: "agendada", label: "Agendadas" },
-                { key: "concluida", label: "Concluídas" },
-                { key: "cancelada", label: "Canceladas" },
+                { key: "scheduled", label: "Agendadas" },
+                { key: "completed", label: "Concluídas" },
+                { key: "cancelled", label: "Canceladas" },
               ] as const
             ).map((f) => (
               <button
@@ -270,9 +283,7 @@ export default function AgendamentosPage() {
               <span className="material-symbols-outlined text-[48px] text-on-surface/10 mb-4 block">
                 event_available
               </span>
-              <p className="text-[14px] text-on-surface-variant">
-                Nenhuma sessão para este dia.
-              </p>
+              <p className="text-[14px] text-on-surface-variant">Nenhuma sessão para este dia.</p>
               <p className="text-[13px] text-on-surface-variant/50 mt-1">
                 Selecione outro dia no calendário ou agende uma nova sessão.
               </p>
@@ -280,9 +291,9 @@ export default function AgendamentosPage() {
           ) : (
             <div className="space-y-3">
               {selectedDaySessions.map((session) => {
-                const status = STATUS_LABELS[session.status] || STATUS_LABELS.agendada;
-                const reserva = RESERVA_LABELS[session.status_reserva];
-                const sessionTime = new Date(session.data_hora);
+                const status = STATUS_LABELS[session.status] || STATUS_LABELS.scheduled;
+                const reserva = RESERVA_LABELS[session.reservation_status];
+                const sessionTime = new Date(session.scheduled_at);
                 const timeStr = sessionTime.toLocaleTimeString("pt-BR", {
                   hour: "2-digit",
                   minute: "2-digit",
@@ -290,12 +301,12 @@ export default function AgendamentosPage() {
 
                 return (
                   <div
-                    key={session.sessao_id}
+                    key={session.id}
                     className="bg-white border border-outline-variant/40 rounded-2xl p-5"
                   >
                     <div className="flex items-start gap-4">
                       <div className="w-11 h-11 rounded-full bg-surface-container-low flex items-center justify-center text-[13px] font-bold text-primary shrink-0">
-                        {session.mentor_nome
+                        {session.mentor_name
                           .split(" ")
                           .map((n) => n[0])
                           .slice(0, 2)
@@ -304,7 +315,7 @@ export default function AgendamentosPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
                           <h4 className="text-[15px] font-semibold text-primary truncate">
-                            {session.mentor_nome}
+                            {session.mentor_name}
                           </h4>
                           {reserva && (
                             <span
@@ -315,18 +326,20 @@ export default function AgendamentosPage() {
                           )}
                         </div>
                         <p className="text-[13px] text-on-surface-variant">
-                          {session.titulo}
-                          {session.mentor_cargo && ` · ${session.mentor_cargo}`}
+                          {session.title}
+                          {session.mentor_title && ` · ${session.mentor_title}`}
                         </p>
                         <div className="flex items-center gap-3 mt-2">
                           <span className="flex items-center gap-1 text-[12px] text-on-surface-variant">
                             <span className="material-symbols-outlined text-[14px]">schedule</span>
-                            {timeStr} · {session.duracao_min}min
+                            {timeStr} · {session.duration_min}min
                           </span>
-                          {session.plataforma_video && (
+                          {session.video_platform && (
                             <span className="flex items-center gap-1 text-[12px] text-on-surface-variant">
-                              <span className="material-symbols-outlined text-[14px]">videocam</span>
-                              {PLATFORM_LABELS[session.plataforma_video] || session.plataforma_video}
+                              <span className="material-symbols-outlined text-[14px]">
+                                videocam
+                              </span>
+                              {PLATFORM_LABELS[session.video_platform] || session.video_platform}
                             </span>
                           )}
                         </div>
@@ -337,17 +350,41 @@ export default function AgendamentosPage() {
                         >
                           {status.label}
                         </span>
-                        {session.status === "agendada" && session.status_reserva === "aprovada" && session.link_reuniao && (
-                          <a
-                            href={session.link_reuniao}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-[12px] font-medium text-orange-500 hover:opacity-60 transition-opacity"
-                          >
-                            <span className="material-symbols-outlined text-[14px]">call</span>
-                            Entrar na Call
-                          </a>
-                        )}
+                        {session.status === "scheduled" &&
+                          session.reservation_status === "approved" &&
+                          session.meeting_link &&
+                          (() => {
+                            const { ok, minutesToStart } = canJoinSession(session.scheduled_at);
+                            if (ok) {
+                              return (
+                                <a
+                                  href={session.meeting_link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1 text-[12px] font-medium text-orange-500 hover:opacity-60 transition-opacity"
+                                >
+                                  <span className="material-symbols-outlined text-[14px]">
+                                    call
+                                  </span>
+                                  Entrar na Call
+                                </a>
+                              );
+                            }
+                            return (
+                              <span className="flex items-center gap-1 text-[11px] text-on-surface-variant/50 text-right max-w-[150px]">
+                                <span className="material-symbols-outlined text-[14px]">lock</span>
+                                Libera em ~{Math.ceil(minutesToStart)} min
+                              </span>
+                            );
+                          })()}
+                        {session.status === "scheduled" &&
+                          session.reservation_status === "approved" &&
+                          session.meeting_link &&
+                          !canJoinSession(session.scheduled_at).ok && (
+                            <span className="text-[10px] text-on-surface-variant/40 text-right max-w-[150px] leading-tight">
+                              Disponível 30 min antes do início
+                            </span>
+                          )}
                       </div>
                     </div>
                   </div>

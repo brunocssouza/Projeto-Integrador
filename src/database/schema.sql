@@ -82,7 +82,8 @@ CREATE TABLE IF NOT EXISTS mentor (
     rating                  DECIMAL(2,1)    NOT NULL DEFAULT 0.0,
     total_reviews           INT UNSIGNED    NOT NULL DEFAULT 0,
     presentation_video_url  VARCHAR(512)    DEFAULT NULL,
-    approved                TINYINT(1)      NOT NULL DEFAULT 0,
+    approval_status         ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+    rejection_reason        VARCHAR(300)    DEFAULT NULL,
 
     UNIQUE KEY uq_mentor_user (user_id),
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import MentorOptIn from "@/components/MentorOptIn";
 
 interface Transaction {
   id: number;
@@ -205,12 +206,8 @@ export default function ConfiguracoesPage() {
   return (
     <div className="p-8 sm:p-12 lg:p-16 w-full max-w-[1200px] mx-auto min-h-screen">
       <header className="mb-10">
-        <h1 className="text-[28px] lg:text-[32px] text-primary font-bold mb-1">
-          Configurações
-        </h1>
-        <p className="text-on-surface-variant text-[14px]">
-          Gerencie seu perfil e preferências
-        </p>
+        <h1 className="text-[28px] lg:text-[32px] text-primary font-bold mb-1">Configurações</h1>
+        <p className="text-on-surface-variant text-[14px]">Gerencie seu perfil e preferências</p>
       </header>
 
       {/* Profile Section */}
@@ -231,7 +228,12 @@ export default function ConfiguracoesPage() {
                 />
               ) : (
                 <span className="text-[24px] font-bold text-primary">
-                  {nome.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
+                  {nome
+                    .split(" ")
+                    .map((n) => n[0])
+                    .slice(0, 2)
+                    .join("")
+                    .toUpperCase()}
                 </span>
               )}
             </div>
@@ -250,12 +252,8 @@ export default function ConfiguracoesPage() {
           </div>
 
           <div className="flex-1">
-            <p className="text-[14px] font-medium text-primary mb-1">
-              Foto de perfil
-            </p>
-            <p className="text-[12px] text-on-surface-variant/60">
-              JPG, PNG ou WebP. Máximo 5MB.
-            </p>
+            <p className="text-[14px] font-medium text-primary mb-1">Foto de perfil</p>
+            <p className="text-[12px] text-on-surface-variant/60">JPG, PNG ou WebP. Máximo 5MB.</p>
           </div>
         </div>
 
@@ -303,6 +301,9 @@ export default function ConfiguracoesPage() {
           )}
         </div>
       </section>
+
+      {/* Mentor opt-in (students only) */}
+      <MentorOptIn />
 
       {/* Password Section */}
       <section className="bg-white border border-outline-variant/30 rounded-2xl p-6 sm:p-8 mb-8">
@@ -371,9 +372,7 @@ export default function ConfiguracoesPage() {
       {/* Transactions Section */}
       <section className="bg-white border border-outline-variant/30 rounded-2xl p-6 sm:p-8 mb-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-[17px] font-semibold text-primary">
-            Histórico de Transações
-          </h2>
+          <h2 className="text-[17px] font-semibold text-primary">Histórico de Transações</h2>
           <span className="text-[13px] font-medium text-on-surface-variant">
             Total: R$ {totalSpent.toFixed(2)}
           </span>
@@ -416,9 +415,7 @@ export default function ConfiguracoesPage() {
                       <p className="text-[13px] font-medium text-primary">{t.title}</p>
                       <p className="text-[11px] text-on-surface-variant/50">{t.area}</p>
                     </td>
-                    <td className="py-3 text-[13px] text-on-surface-variant">
-                      {t.mentorName}
-                    </td>
+                    <td className="py-3 text-[13px] text-on-surface-variant">{t.mentorName}</td>
                     <td className="py-3 text-[13px] text-on-surface-variant">
                       {formatDate(t.dateTime)}
                     </td>
@@ -440,12 +437,10 @@ export default function ConfiguracoesPage() {
 
       {/* Danger Zone */}
       <section className="border border-red-200 rounded-2xl p-6 sm:p-8">
-        <h2 className="text-[17px] font-semibold text-red-600 mb-2">
-          Zona de Perigo
-        </h2>
+        <h2 className="text-[17px] font-semibold text-red-600 mb-2">Zona de Perigo</h2>
         <p className="text-[13px] text-on-surface-variant/60 mb-6">
-          Excluir sua conta é uma ação irreversível. Todos os seus dados, sessões
-          e histórico serão permanentemente removidos.
+          Excluir sua conta é uma ação irreversível. Todos os seus dados, sessões e histórico serão
+          permanentemente removidos.
         </p>
 
         {!showDeleteConfirm ? (
@@ -458,8 +453,7 @@ export default function ConfiguracoesPage() {
         ) : (
           <div className="space-y-4">
             <p className="text-[13px] text-on-surface-variant">
-              Digite <span className="font-bold text-red-600">EXCLUIR</span> para
-              confirmar:
+              Digite <span className="font-bold text-red-600">EXCLUIR</span> para confirmar:
             </p>
             <input
               type="text"

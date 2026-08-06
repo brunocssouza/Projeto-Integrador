@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import pool from "@/infra/database";
 import { hashPassword } from "@/infra/auth";
 import { findByEmail, create } from "@/models/User";
+import { create as createMentor, syncTechnologies } from "@/models/Mentor";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { validateBody, withErrorHandler } from "@/lib/validate";
 import { registerSchema } from "@/lib/schemas/auth";
@@ -20,7 +21,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     data.cpf,
   ]);
   if (existingCpf.length > 0) {
-    throw conflict("Este email já está cadastrado");
+    throw conflict("Este CPF já está cadastrado");
   }
 
   const hashedPassword = await hashPassword(data.password);
@@ -42,7 +43,29 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     await pool.query("INSERT INTO student (user_id) VALUES (?)", [userId]);
   }
 
-  logger.info("User registered", { userId, email: data.email });
+  // Mentor applicants: create a pending mentor row with their profile so admins can review.
+  if (isMentor && data.mentorProfile) {
+    const mp = data.mentorProfile;
+    const mentorId = await createMentor(userId, {
+      title: mp.title,
+      company: mp.company || null,
+      description: mp.description,
+      professionalExperience: mp.professionalExperience || null,
+      pricePerSession: mp.pricePerSession,
+    });
+    await syncTechnologies(mentorId, mp.technologies || []);
+  }
 
-  return Response.json({ message: "Conta criada com sucesso", userId }, { status: 201 });
+  logger.info("User registered", { userId, email: data.email, isMentor });
+
+  return Response.json(
+    {
+      message:
+        isMentor && !isStudent
+          ? "Conta criada! Seu cadastro de mentor está em análise (até 3 dias úteis)."
+          : "Conta criada com sucesso",
+      userId,
+    },
+    { status: 201 }
+  );
 });

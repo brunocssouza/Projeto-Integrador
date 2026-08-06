@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
     const sessaoId = await create({
       student_id: studentId,
       mentor_id: mentorId,
+      payer_user_id: payload.userId,
       title: titulo,
       area,
       scheduled_at: data_hora,

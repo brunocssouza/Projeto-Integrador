@@ -39,7 +39,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { id } = await params;
     const sessaoId = Number(id);
     const body = await request.json();
-    const { action, link_reuniao, motivo_cancelamento } = body;
+    const { action, meeting_link, motivo_cancelamento } = body;
 
     const sessao = await findById(sessaoId);
     if (!sessao) {
@@ -55,7 +55,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       if (!ownership.isMentor) {
         return Response.json({ error: "Apenas mentores podem aprovar" }, { status: 403 });
       }
-      if (sessao.reservation_status !== "pendente") {
+      if (sessao.reservation_status !== "pending") {
         return Response.json({ error: "Sessão não está pendente" }, { status: 400 });
       }
       await approve(sessaoId);
@@ -66,7 +66,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       if (!ownership.isMentor) {
         return Response.json({ error: "Apenas mentores podem recusar" }, { status: 403 });
       }
-      if (sessao.reservation_status !== "pendente") {
+      if (sessao.reservation_status !== "pending") {
         return Response.json({ error: "Sessão não está pendente" }, { status: 400 });
       }
       await decline(sessaoId);
@@ -74,7 +74,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     if (action === "cancel") {
-      if (sessao.status === "cancelada") {
+      if (sessao.status === "cancelled") {
         return Response.json({ error: "Sessão já cancelada" }, { status: 400 });
       }
       await cancel(sessaoId, payload.userId, motivo_cancelamento);
@@ -85,10 +85,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       if (!ownership.isMentor) {
         return Response.json({ error: "Apenas mentores podem adicionar link" }, { status: 403 });
       }
-      if (!link_reuniao) {
+      if (!meeting_link) {
         return Response.json({ error: "Link é obrigatório" }, { status: 400 });
       }
-      await updateLink(sessaoId, link_reuniao);
+      await updateLink(sessaoId, meeting_link);
       return Response.json({ message: "Link atualizado" });
     }
 
@@ -96,15 +96,22 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       if (!ownership.isMentor) {
         return Response.json({ error: "Apenas mentores podem iniciar" }, { status: 403 });
       }
-      if (sessao.reservation_status !== "aprovada") {
+      if (sessao.reservation_status !== "approved") {
         return Response.json({ error: "Sessão precisa estar aprovada" }, { status: 400 });
+      }
+      const minutesToStart = (new Date(sessao.scheduled_at).getTime() - Date.now()) / 60000;
+      if (minutesToStart > 30) {
+        return Response.json(
+          { error: "O acesso libera 30 minutos antes do início da sessão." },
+          { status: 400 }
+        );
       }
       await start(sessaoId);
       return Response.json({ message: "Sessão iniciada" });
     }
 
     if (action === "complete") {
-      if (sessao.status !== "em_andamento") {
+      if (sessao.status !== "in_progress") {
         return Response.json({ error: "Sessão precisa estar em andamento" }, { status: 400 });
       }
       await complete(sessaoId);
@@ -136,8 +143,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         return Response.json({ error: "Sessão não encontrada" }, { status: 404 });
       }
 
-      if (sessao.status !== "em_andamento" && sessao.reservation_status !== "aprovada") {
+      if (sessao.status !== "in_progress" && sessao.reservation_status !== "approved") {
         return Response.json({ error: "Sessão não está disponível para entrada" }, { status: 400 });
+      }
+
+      const minutesToStart = (new Date(sessao.scheduled_at).getTime() - Date.now()) / 60000;
+      if (minutesToStart > 30) {
+        return Response.json(
+          { error: "O acesso libera 30 minutos antes do início da sessão." },
+          { status: 400 }
+        );
       }
 
       if (ownership.isMentor) {
