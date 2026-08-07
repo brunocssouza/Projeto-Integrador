@@ -70,7 +70,7 @@ async function seed() {
       ]
     );
     const id = (r as any).insertId;
-    console.log(`  ✅ ${email} (id=${id})`);
+    console.log(` ${email} (id=${id})`);
     return id;
   }
 
