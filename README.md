@@ -218,39 +218,18 @@ npm run test
 
 ## Credenciais de Teste
 
-Todas as contas abaixo são criadas pela seed (`npm run db:reset`) e usam a
+As contas abaixo são criadas pela seed (`npm run db:reset`) e usam a
 **senha `123456`**.
 
-### Aluno
-
-| Email                         | Senha    | Observação                           |
-| ----------------------------- | -------- | ------------------------------------ |
-| `aluno@aluno.com`             | `123456` | Apenas aluno                         |
-| `alunomentor@alunomentor.com` | `123456` | Aluno **e** mentor (perfil completo) |
-| `admin@admin.com`             | `123456` | Admin (também é aluno)               |
-
-### Mentor
-
-| Email                         | Senha    | Observação                       |
-| ----------------------------- | -------- | -------------------------------- |
-| `mentor@mentor.com`           | `123456` | Apenas mentor (já aprovado)      |
-| `alunomentor@alunomentor.com` | `123456` | Aluno e mentor (perfil completo) |
-| `admin@admin.com`             | `123456` | Admin (também é mentor)          |
+| Perfil        | Email               | Senha    | Observação                      |
+| ------------- | ------------------- | -------- | ------------------------------- |
+| Aluno         | `aluno@aluno.com`   | `123456` | Apenas aluno                    |
+| Mentor        | `mentor@mentor.com` | `123456` | Mentor já aprovado              |
+| Administrador | `admin@admin.com`   | `123456` | Admin (também é aluno e mentor) |
 
 > **Nota:** para testar o **fluxo de aprovação de mentor**, cadastre um novo
 > mentor pelo `/register` — ele ficará pendente e não conseguirá logar até ser
 > aprovado pelo admin no painel `/admin/mentores`.
-
-### Administrador
-
-| Email             | Senha    |
-| ----------------- | -------- |
-| `admin@admin.com` | `123456` |
-| `admin@admin.com` | `123456` |
-| `admin@admin.com` | `123456` |
-
-> Há apenas 1 conta admin na seed. Use `admin@admin.com` / `123456`.
-> O login de admin redireciona para o painel em `/admin`.
 
 ---
 
